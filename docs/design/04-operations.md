@@ -1,8 +1,8 @@
 # iegoto 運用・品質方針（§10.4 O-1〜O-5）
 
-作成日: 2026-07-17
-ステータス: 決定案（インフラのモジュール分割詳細はR-4完了後に具体化）
-関連: `docs/design/02-tech-selection.md`
+作成日: 2026-07-17（同日更新: R-4完了によりO-1のTerraform構成を確定）
+ステータス: 決定案
+関連: `docs/design/02-tech-selection.md` / `docs/design/05-plainer-extraction-report.md` R-4
 
 ---
 
@@ -16,15 +16,28 @@
 | stg | GCPプロジェクト `iegoto-stg` | main merge時の自動デプロイ先。本番同等構成の縮小版 |
 | prod | GCPプロジェクト `iegoto-prod` | 手動承認デプロイ（T-8） |
 
-- Terraformディレクトリ構成（R-4でplainer構成を確認後に微調整）:
+- Terraformディレクトリ構成（R-4のplainer構成を縮小移植して確定。`05-plainer-extraction-report.md`）:
   ```
   infra/
-  ├── modules/          # cloud-run / cloud-sql / scheduler / secrets / monitoring
+  ├── modules/
+  │   ├── cloud_run_service/   # サービス本体 + secret注入 + Cloud SQL接続
+  │   ├── cloud_sql/           # PITR・バックアップ設定込み（O-3）
+  │   ├── cloud_scheduler/     # Google同期(毎時) + リマインダー配信(毎分)。httpターゲットのみに削る
+  │   ├── secret_manager/      # 「器だけ」方式（下記）
+  │   ├── artifact_registry/
+  │   └── monitoring/          # O-2のアラート3種
   └── envs/
-      ├── stg/          # backend(GCSバケット)・変数のみ。modulesを参照
+      ├── stg/                 # backend.tf(GCS) / locals.tf / main.tf / provider.tf
       └── prod/
   ```
-- 環境差分は `envs/*/terraform.tfvars` に集約（インスタンスサイズ・min instances等）。モジュール本体に環境分岐を書かない
+- plainerから移植する型（R-4）:
+  - モジュールは「object型変数 + `optional()`デフォルト + `validation`」でパラメータ化し、環境側から丸渡し
+  - **環境差分はtfvarsではなく`envs/*/locals.tf`に集約**（plainer方式。tfvarsは.gitignore対象とし使わない）。モジュール本体に環境分岐を書かない
+  - **Secretは「器だけTerraform」**: secret IDのみ作成し、値はTerraformに書かない（ダミー初期バージョン→実値は手動/CI投入）。Cloud Runへは`secret_key_ref`の環境変数注入。非機密`env.vars`と機密`env.secrets`をlocalsで分離
+- plainerから簡略化する点（R-4の注意点を採用）:
+  - **stateはTerraform CloudではなくGCS backend**（環境ごとのstateバケット）。plan/applyはGitHub Actions（T-8: PRでplanコメント、mergeでstg apply、prodは手動承認）
+  - 環境はstg/prodの2つのみ（monitoring専用workspace・dns・local環境は作らない。監視は各envのmonitoringモジュールに同居）
+  - **VPC・VPCコネクタは作らない**: Cloud Run内蔵のCloud SQL接続（T-1のコネクタ方式）を使い、ネットワーク系モジュールを丸ごと省略
 - Web Push(FCM/VAPID)・Google OAuthクライアントも環境ごとに分離（stgの通知が本番端末に飛ぶ事故を防ぐ）
 
 ## O-2 監視・エラートラッキング

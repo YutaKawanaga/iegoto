@@ -1,8 +1,8 @@
 # iegoto ドメインモデル・データモデル設計書
 
-作成日: 2026-07-17
-ステータス: ドラフト（DDDレイヤ構成の詳細はR-2完了後に具体化）
-関連: `docs/design/01-spec-decisions.md` / `docs/design/02-tech-selection.md`
+作成日: 2026-07-17（同日更新: R-2完了により§5の未決事項を解消）
+ステータス: 決定案
+関連: `docs/design/01-spec-decisions.md` / `docs/design/02-tech-selection.md` / `docs/design/07-backend-design.md`
 
 ---
 
@@ -150,8 +150,15 @@ erDiagram
 連携系: `linkGoogleCalendar` / `unlinkGoogleCalendar`（revoke含む） / `syncGoogleCalendar`（Scheduler起点）
 通知系: `subscribePush` / `updateNotificationSetting` / `dispatchEventChangeNotifications`（変更系ユースケースから発火） / `dispatchReminders`（分単位Scheduler起点: `開始時刻 - reminder_minutes_before` が現在分に一致する展開済み予定を抽出して送信）
 
-## 5. 未決事項（R-2完了後に確定）
+## 5. レイヤ構成（R-2完了により確定 → 詳細は `07-backend-design.md`）
 
-- レイヤ間の依存ルール・ディレクトリ命名（plainer-backendのDDD構成に合わせる）
-- リポジトリインターフェースの置き場所（domain層 or application層）
-- ユースケースの実装単位（1クラス1メソッド vs サービスクラス）
+R-2の抽出結果（`05-plainer-extraction-report.md`）を反映して以下のとおり確定した:
+
+- **レイヤ間の依存ルール・ディレクトリ命名**: plainerの独自マッピング（`route/`にUseCase同居）は
+  持ち込まず、DDD標準の層名に正規化（presentation=`modules/*/router.ts` / application=`modules/*/usecases/` /
+  domain=`packages/domain` / infrastructure=`packages/db`）。依存方向はパッケージ境界で物理強制
+- **リポジトリインターフェース**: plainerに合わせ**interface分離なし・具象クラスのみ**（`packages/db`）。
+  ただしメソッドの引数・戻り値はdomainエンティティに限定しPrisma型を漏らさない。
+  全メソッドの第一引数を`familyId`必須にして§1のテナント境界を型で強制
+- **ユースケースの実装単位**: **1ユースケース = 1ファイル = 1 exported関数**（plainerの
+  「1 UseCase 1クラス・public `process()`のみ」のTS翻訳）。§4の一覧と1:1対応。トランザクション境界はUseCase

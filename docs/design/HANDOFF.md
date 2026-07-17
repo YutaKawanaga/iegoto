@@ -1,6 +1,13 @@
 # iegoto 設計セッション引き継ぎドキュメント
 
-**このドキュメントは、plainerリポジトリ（learningsales org）を参照できるClaude Codeセッションへの引き継ぎ用。単体で全文脈が伝わるように書かれている。**
+> **✅ 完了（2026-07-17）**: 本ドキュメントの依頼事項（§4 R-1〜R-4の抽出、§5の設計確定）はすべて実施済み。
+> iegotoとplainer 3リポジトリの両方を参照できるセッションが確保できたため、「チャット出力で持ち帰る」
+> 制約（§0）は不要となり、成果物は直接本リポジトリにコミットした。
+> 成果物: `05-plainer-extraction-report.md`（抽出レポート）/ `02-tech-selection.md`（T-3/T-4/T-5確定）/
+> `06-frontend-design.md` / `07-backend-design.md` / `08-feature-flag.md` / `04-operations.md` O-1更新。
+> 本ドキュメントは経緯の記録として残す。
+
+**このドキュメントは、plainerリポジトリ（learningsales org)を参照できるClaude Codeセッションへの引き継ぎ用。単体で全文脈が伝わるように書かれている。**
 
 作成日: 2026-07-17 / 引き継ぎ元: yutakawanaga/iegoto の設計セッション
 
