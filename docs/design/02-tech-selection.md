@@ -64,7 +64,8 @@
   「page単位ディレクトリ構成ルールごとそちらに合わせる」を適用し、**Next.js App Router案を破棄**して確定
 - plainerに合わせることの実利:
   - `front/CLAUDE.md`の実証済み規約一式（pages薄型ラッパー / co-locationコンテナ / rule of two / ドメイン間import禁止 / hooks・utilsテスト必須）を**そのまま移植できる**（→ `06-frontend-design.md`）
-  - Chakra UI v3 + テーマ共有パッケージ、TanStack Queryの構成・運用ノウハウも共通化
+  - TanStack Queryの構成・運用ノウハウも共通化
+  - ただし**UIライブラリはplainerのChakra UIを踏襲せず、shadcn/ui + Tailwind CSSを採用**（設計レビューでの決定。詳細と影響は`06-frontend-design.md` §5）
 - iegoto要件との適合確認:
   - SSR不要: 全画面ログイン必須（家族外アクセス遮断）でSEO対象ページが存在しない。初回表示はSPA + Cloud Run/CDNで十分
   - PWA（F-09）/ Web Push（F-08）: plainerに前例はないが、`vite-plugin-pwa` + 自前Service Workerで成立する（Next.js特有の優位性はない）。SWの設計は`06-frontend-design.md`に記載
@@ -92,16 +93,19 @@
   ├── apps/
   │   ├── web/        # フロントエンド (Vite + React SPA。T-4)
   │   └── api/        # バックエンド (Hono + tRPC。T-5)
-  ├── packages/
-  │   ├── domain/     # ドメイン層（エンティティ・値オブジェクト・ドメインサービス）
+  ├── packages/       # apps横断で共有するコードだけを置く
+  │   ├── domain/     # ドメイン層（エンティティ・VO・ドメインサービス・RRULE/TZ処理）
   │   ├── db/         # Prismaスキーマ・リポジトリ実装（infrastructure層）
-  │   ├── shared/     # 共有型・ユーティリティ（TZ処理・RRULEラッパ等）
-  │   └── theme/      # Chakra UIテーマトークン（plainerの packages/theme 方式。R-1）
-  ├── flags/          # フィーチャーフラグ定義（08-feature-flag.md）
+  │   └── feature-flags/  # フラグのzodスキーマ・評価ロジック（CI検証とAPIで共用。08）
+  ├── flags/          # フィーチャーフラグ定義JSON（08-feature-flag.md）
+  ├── e2e/            # Playwright E2Eテスト（O-4。plainerのe2e/ workspace方式）
   ├── infra/          # Terraform
   └── docs/
   ```
 - Nxは不採用: 生成器・プラグインの学習コストがこの規模に見合わない。Turborepoはタスクパイプライン+キャッシュだけの薄さがちょうどよい
+- `packages/`配下は「apps横断で共有するものだけ」に限定し、用途が曖昧な`shared`・`utils`のような
+  雑多パッケージは作らない（設計レビューで整理: 当初案の`packages/shared`はRRULE/TZがドメインロジックで
+  あるため`domain`へ統合、`packages/theme`はshadcn/ui採用（T-4）によりChakra前提が消えたため廃止）
 
 ## T-7 Googleカレンダー同期: **Cloud Scheduler → 1時間ごとポーリング + syncTokenによる差分同期** — 確定
 

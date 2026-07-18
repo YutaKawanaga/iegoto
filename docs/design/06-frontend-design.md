@@ -14,7 +14,7 @@
 | ルーティング | React Router（`RouteObject[]`オブジェクト定義） | ファイルベースルーティングは使わない（plainer方式） |
 | データフェッチ | tRPC + `@trpc/react-query`（TanStack Query） | orval生成hooksと同じ書き味。`staleTime`等の既定はQueryProviderに集約 |
 | クライアント状態 | React state + Context から開始 | jotaiはMVPでは導入しない。導入する場合は「atom直接export禁止・hook経由のみ」（plainer規約）を最初から適用 |
-| スタイリング | Chakra UI v3 + `packages/theme` | トークンはゼロから定義（plainerのBulma由来トークンは持ち込まない） |
+| スタイリング | **shadcn/ui + Tailwind CSS**（Radix UIベース） | 設計レビューでの決定によりplainerのChakra構成は踏襲しない。詳細は§5 |
 | Lint/Format | Biome | 抑制コメントには理由必須（plainer共通規約） |
 | テスト | Vitest + Testing Library | `hooks/` `utils/` はテスト必須（plainer共通規約） |
 | PWA | `vite-plugin-pwa` + 自前Push用Service Worker | plainerに前例なし。§6で自前設計 |
@@ -38,7 +38,7 @@ apps/web/src/
 │   ├── invite/invite-join-page.tsx        # /invite/:token（認証後合流）
 │   └── login/login-page.tsx
 ├── components/
-│   ├── ui/                       # Chakra snippet置き場（編集禁止。plainer規約踏襲）
+│   ├── ui/                       # shadcn/ui生成コンポーネント（CLIで追加する所有コード。§5）
 │   ├── layout/                   # RootLayout（ヘッダ・ボトムナビ）
 │   ├── today-container/
 │   ├── calendar-container/       # 月/週ビュー・メンバーフィルタ（F-02）
@@ -94,12 +94,18 @@ apps/web/src/
 - **リアルタイム反映（T-2）**: `use-realtime.ts`が家族単位のSSEストリームを購読し、受信イベント（種別+対象ID）に応じて該当queryを`invalidateQueries`する。SSE切断時はフォアグラウンド限定の5秒ポーリングにフォールバック。楽観更新は買い物リストのチェック操作（F-05）のみMVPで採用し、他は再取得で十分
 - クエリキーはtRPCの自動キーに委ね、手動キー管理をしない
 
-## 5. スタイリング・テーマ
+## 5. スタイリング・UI（shadcn/ui + Tailwind CSS）
 
-- `packages/theme` に `createSystem` ベースのカスタムテーマを定義（plainerの`custom-system.ts`の作法だけ流用し、トークンは新規定義）
-- **メンバーカラー（F-02の核心）はテーマトークンとして定義**: `colors.member.{1..N}`（プリセット8〜12色）。予定チップ・アバター・フィルタUIはこのトークン経由でのみ着色し、固定色直書き禁止
-- short-hand props（`p="4"`）・token値のみ・生HTMLタグ禁止（Chakraコンポーネント使用）— plainer規約踏襲
-- ダーク対応はMVP外（トークン経由を守っていれば後付け可能）
+設計レビューの結果、UIライブラリはplainerのChakra UIを踏襲せず **shadcn/ui**（Tailwind CSS + Radix UI）を採用する。
+
+- Chakraとの思想の違い: shadcn/uiはnpm依存ライブラリではなく、**コンポーネントのソースをCLIでリポジトリにコピーして所有する**方式。したがって`components/ui/`の扱いはplainerの「編集禁止」と**逆**で、自分のコードとして編集してよい。ただし無秩序な直接改造は避け、カスタマイズはvariant追加（`class-variance-authority`）を優先して生成時の構造から離れすぎないこと
+- デザイントークンはTailwind theme + CSS variablesに集約:
+  - **メンバーカラー（F-02の核心）**: `--member-1`〜`--member-N`（プリセット8〜12色）をCSS variablesで定義し、Tailwindの`colors.member.*`として公開。予定チップ・アバター・フィルタUIはこのトークン経由でのみ着色し、**固定色の直書き禁止**（plainerの「固定色直書き禁止」規約の趣旨を維持）
+  - semanticトークン（`background` / `foreground` / `primary` / `destructive`等）はshadcn標準のCSS variables構成に従う
+- クラス合成は`cn()`（clsx + tailwind-merge）、variant定義は`class-variance-authority`のshadcn標準構成
+- `packages/theme`は**作らない**（Chakraのテーマ共有パッケージが前提の案だった。Tailwind設定とCSS variablesは`apps/web`内で完結し、webアプリが1つの間は共有パッケージにする理由がない）
+- toastはshadcn推奨のsonnerを`use-app-toast.ts`でラップして呼び出しを一元化（plainerのtoast一元化規約の趣旨を維持）
+- ダーク対応はMVP外（CSS variables経由を守っていれば後付け可能）
 
 ## 6. PWA / Web Push（F-08 / F-09。plainerに前例がないため自前設計）
 

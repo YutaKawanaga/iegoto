@@ -58,7 +58,7 @@ flags/
   （MVPでの用途: 自分の家族でのドッグフーディング → 全体公開）。評価は
   `enabledFamilyIds.includes(familyId) || defaultValue`
 - 恒久フラグ（killswitch等）は`cleanupBy: "2099-12-31"`で棚卸し対象から除外（plainer運用踏襲)
-- スキーマはzodで`packages/shared/src/feature-flag.ts`に定義し、検証スクリプトと実行時ロードで共用する
+- スキーマ・評価ロジックはzodで`packages/feature-flags`に定義し、CI検証スクリプト（`scripts/validate-flags.ts`）とAPIの実行時ロード・評価ヘルパー（§2）で共用する
 
 ## 2. 配信・評価
 
