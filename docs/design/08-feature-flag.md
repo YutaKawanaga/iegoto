@@ -21,20 +21,17 @@ Cloud Run 1サービスのiegotoにこの配管を持ち込む理由はない。
 | fail-closed / fail-open の2評価モード | **採用**（概念のみ） | `isEnabled`（未知→false）/ `isEnabledOrDefaultTrue`（未知→true） |
 | GCS / Cloud Functions / API Gateway 配信 | 不採用 | フラグはアプリにバンドルして配布 |
 | backend側のDB同期ジョブ + feature_flagsテーブル | 不採用 | 配信元=自分自身のため冗長化が不要 |
-| 3環境×クロスプロジェクトIAM/WIF | 不採用 | 環境はstg/prdの2つ、同一リポジトリ内 |
+| 3環境×クロスプロジェクトIAM/WIF | 不採用 | クラウド環境はprodのみ（O-1）、同一リポジトリ内 |
 
 ## 1. フラグ定義
 
-モノレポ直下 `flags/` に環境別JSONを置く（plainerのスキーマから`cleanupBy`まで踏襲）:
+モノレポ直下 `flags/` に置く（plainerのスキーマから`cleanupBy`まで踏襲。環境はprodのみ=単一セットで、
+ローカル開発も同じファイルを読む。O-1）:
 
 ```
 flags/
-├── stg/
-│   ├── feature-flags.json
-│   └── deleted-flags.json
-└── prd/
-    ├── feature-flags.json
-    └── deleted-flags.json
+├── feature-flags.json
+└── deleted-flags.json
 ```
 
 ```json

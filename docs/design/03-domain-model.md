@@ -87,6 +87,7 @@ erDiagram
 | recurrence_end_at | timestamptz NULL | RRULEのUNTIL/COUNTから事前計算した実終端（期間クエリ最適化用。無期限はNULL） |
 | assignee_member_id | uuid FK NULL | 担当者。NULL=担当者未定（F-04） |
 | reminder_minutes_before | int NULL | NULL=リマインダーなし（S-6） |
+| next_reminder_at | timestamptz NULL | 次回リマインダー発火時刻の事前計算値。INDEX。書き込み時と発火後に再計算（繰り返しはRRULEから次回を導出）。NULL=なし/消化済み |
 | created_by_member_id | uuid FK | |
 | deleted_at | timestamptz NULL | |
 
@@ -148,7 +149,7 @@ erDiagram
 予定系: `createEvent` / `updateEvent`（3択の編集スコープ引数） / `deleteEvent`（同） / `listEventsInRange`（展開・マージ） / `listMyAssignedEvents` / `listUnassignedEvents` / `suggestPastEvents`（S-5）
 買い物系: `createShoppingList` / `addItem` / `checkItem` / `uncheckItem` / `deleteItem`
 連携系: `linkGoogleCalendar` / `unlinkGoogleCalendar`（revoke含む） / `syncGoogleCalendar`（Scheduler起点）
-通知系: `subscribePush` / `updateNotificationSetting` / `dispatchEventChangeNotifications`（変更系ユースケースから発火） / `dispatchReminders`（分単位Scheduler起点: `開始時刻 - reminder_minutes_before` が現在分に一致する展開済み予定を抽出して送信）
+通知系: `subscribePush` / `updateNotificationSetting` / `dispatchEventChangeNotifications`（変更系ユースケースから発火） / `dispatchReminders`（分単位Scheduler起点: `next_reminder_at <= now()` の予定をINDEX一発で抽出して送信し、送信後に次回発火時刻を再計算してUPDATE。毎分全予定をRRULE展開して照合する方式は採らない — 展開はイベントの書き込み時と発火後のみに限定し、展開バグの影響面と毎分の計算量を抑える）
 
 ## 5. レイヤ構成（R-2完了により確定 → 詳細は `07-backend-design.md`）
 

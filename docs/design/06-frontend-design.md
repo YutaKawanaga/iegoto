@@ -19,6 +19,10 @@
 | テスト | Vitest + Testing Library | `hooks/` `utils/` はテスト必須（plainer共通規約） |
 | PWA | `vite-plugin-pwa` + 自前Push用Service Worker | plainerに前例なし。§6で自前設計 |
 
+配信: ビルド成果物はAPI（Hono）と**同一のCloud Runコンテナから配信**する単一オリジン構成
+（CORS不要・セッションクッキーがSameSite=Laxで素直・PWA scopeが`/`で自然。`04-operations.md` O-1）。
+開発時はViteのdevサーバ + `/trpc`等をlocalhost:8000へプロキシ（plainerと同じ構図）。
+
 ## 2. ディレクトリ構成
 
 plainerの`front/CLAUDE.md`規約を移植し、iegotoの画面（today / calendar / event / shopping / settings / invite）に適用する。
@@ -50,7 +54,7 @@ apps/web/src/
 ├── hooks/                        # グローバルhook（テスト必須）
 │   ├── use-auth.ts
 │   ├── use-family.ts             # セッション中の family / member 一覧
-│   ├── use-realtime.ts           # SSE購読 + invalidate + ポーリングfallback（T-2）
+│   ├── use-realtime.ts           # 変更検知（MVP: 5秒ポーリング。SSE後付けに備えた抽象。T-2）
 │   ├── use-push.ts               # Push購読・許可状態（F-08）
 │   ├── use-feature-flags.ts      # 08-feature-flag.md。取得中/エラーはfail-closed
 │   ├── use-app-toast.ts          # toast一元化（plainerのuse-plainer-toast方式）
@@ -91,7 +95,7 @@ apps/web/src/
 
 - **サーバ状態はすべてTanStack Query（tRPC hooks）**。手書きfetch禁止、型は`AppRouter`から推論（手書きAPI型の禁止はplainerの「型は生成物からimport」規約のtRPC版）
 - mutationは`useMutation` + `mutateAsync`、副作用（invalidate・navigate・toast）は`onSuccess`に集約（plainer規約踏襲）
-- **リアルタイム反映（T-2）**: `use-realtime.ts`が家族単位のSSEストリームを購読し、受信イベント（種別+対象ID）に応じて該当queryを`invalidateQueries`する。SSE切断時はフォアグラウンド限定の5秒ポーリングにフォールバック。楽観更新は買い物リストのチェック操作（F-05）のみMVPで採用し、他は再取得で十分
+- **リアルタイム反映（T-2）**: MVPは`use-realtime.ts`によるフォアグラウンド限定の5秒ポーリング（`visibilitychange`で停止・再開）で、表示中データのqueryを定期`invalidateQueries`する。将来SSE化する場合もこのhookの内部差し替えのみで、呼び出し側コンポーネントは変更しない。楽観更新は買い物リストのチェック操作（F-05）のみMVPで採用し、他は再取得で十分
 - クエリキーはtRPCの自動キーに委ね、手動キー管理をしない
 
 ## 5. スタイリング・UI（shadcn/ui + Tailwind CSS）

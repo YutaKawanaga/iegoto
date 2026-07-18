@@ -8,13 +8,23 @@
 
 ## O-1 環境構成
 
-**決定: dev はローカル（docker compose）、クラウドは stg / prod の2環境。GCPプロジェクトを環境ごとに分離する。**
+**決定: dev はローカル（docker compose）、クラウドは prod のみの1環境**（設計レビューで変更。個人利用のWebアプリでstg維持コストが見合わないため）。
 
 | 環境 | 実体 | 用途 |
 |---|---|---|
 | dev | ローカル docker compose（Postgres）+ `pnpm dev` | 日常開発。GCPリソース不要で回せることを必須要件にする |
-| stg | GCPプロジェクト `iegoto-stg` | main merge時の自動デプロイ先。本番同等構成の縮小版 |
-| prod | GCPプロジェクト `iegoto-prod` | 手動承認デプロイ（T-8） |
+| prod | GCPプロジェクト `iegoto-prod` | main merge時の自動デプロイ先（T-8）。品質担保はPR CI（unit/統合/E2E）に寄せる |
+
+- stgを持たない代わりの安全弁: PR CIのE2E（ローカル環境相手）/ デプロイ後ヘルスチェック+リビジョンロールバック / 本番投入前の新機能はフィーチャーフラグの`enabledFamilyIds`で自家族限定公開（08）
+- Terraformの`envs/`はprodのみ作成。locals方式（下記）のため、将来stgが必要になったら`envs/prod`の複製+locals差し替えで追加できる
+
+### 配信構成（セルフレビューで確定）
+
+**SPA（apps/web）のビルド成果物は、API（Hono）と同一のCloud Runコンテナから配信する（単一オリジン）。**
+
+- Dockerイメージのビルド時に`apps/web`をビルドし、Honoが静的ファイルとして配信（`/api`・`/trpc`以外はSPAフォールバック）
+- 理由: ①CORS設定が不要 ②セッションクッキーがSameSite=Laxで素直に動く ③PWAのscopeが自然に`/`になる ④配信用インフラ（GCS+LB等）が丸ごと不要
+- 独自ドメインはCloud Runのカスタムドメインマッピングで接続（LBを立てない。証明書は自動管理）
 
 - Terraformディレクトリ構成（R-4のplainer構成を縮小移植して確定。`05-plainer-extraction-report.md`）:
   ```
@@ -27,18 +37,33 @@
   │   ├── artifact_registry/
   │   └── monitoring/          # O-2のアラート3種
   └── envs/
-      ├── stg/                 # backend.tf(GCS) / locals.tf / main.tf / provider.tf
-      └── prod/
+      └── prod/                # backend.tf(GCS) / locals.tf / main.tf / provider.tf
+                               #   ※stgは作らない。必要になったらこの複製+locals差し替えで追加
   ```
 - plainerから移植する型（R-4）:
   - モジュールは「object型変数 + `optional()`デフォルト + `validation`」でパラメータ化し、環境側から丸渡し
   - **環境差分はtfvarsではなく`envs/*/locals.tf`に集約**（plainer方式。tfvarsは.gitignore対象とし使わない）。モジュール本体に環境分岐を書かない
   - **Secretは「器だけTerraform」**: secret IDのみ作成し、値はTerraformに書かない（ダミー初期バージョン→実値は手動/CI投入）。Cloud Runへは`secret_key_ref`の環境変数注入。非機密`env.vars`と機密`env.secrets`をlocalsで分離
 - plainerから簡略化する点（R-4の注意点を採用）:
-  - **stateはTerraform CloudではなくGCS backend**（環境ごとのstateバケット）。plan/applyはGitHub Actions（T-8: PRでplanコメント、mergeでstg apply、prodは手動承認）
-  - 環境はstg/prodの2つのみ（monitoring専用workspace・dns・local環境は作らない。監視は各envのmonitoringモジュールに同居）
+  - **stateはTerraform CloudではなくGCS backend**。plan/applyはGitHub Actions（T-8: PRでplanコメント、applyはmerge後に手動承認）
+  - 環境はprodのみ（monitoring専用workspace・dns・local環境は作らない。監視はmonitoringモジュールに同居）
   - **VPC・VPCコネクタは作らない**: Cloud Run内蔵のCloud SQL接続（T-1のコネクタ方式）を使い、ネットワーク系モジュールを丸ごと省略
-- Web Push(FCM/VAPID)・Google OAuthクライアントも環境ごとに分離（stgの通知が本番端末に飛ぶ事故を防ぐ）
+- Web Push(FCM/VAPID)・Google OAuthクライアントは**ローカル開発用とprod用を分離**（開発中の通知が本番端末に飛ぶ事故を防ぐ）
+
+### 月額コスト試算（prod・asia-northeast1、2026年時点の概算）
+
+| リソース | 構成 | 月額目安 |
+|---|---|---|
+| Cloud SQL (db-f1-micro) | 常時起動・ZONAL・SSD 10GB・バックアップ7世代+PITR | **$10〜14**（インスタンス$8〜11 + ストレージ$2 + バックアップ$1前後） |
+| Cloud Run | min-instances=0（T-2でポーリング採用のためscale-to-zero可） | $0〜2（家族規模のリクエストは無料枠内が中心） |
+| Cloud Scheduler | 2ジョブ（Google同期・リマインダー） | $0（3ジョブまで無料） |
+| Artifact Registry / Secret Manager / GCS(state・エクスポート) / Logging・Monitoring | — | $0〜1（ほぼ無料枠内） |
+| **合計** | | **月 $12〜17（約¥2,000〜2,700）**。支配項はCloud SQL |
+
+- 別途: 独自ドメイン代（年¥1,500〜2,000程度）
+- 将来SSE化（T-2の拡張パス）するとSSE接続中インスタンスが保持され実質min-instance=1相当（+$10〜20/月）になる点に注意。ポーリング採用はコスト面でも効いている
+- 削減余地: SSD→HDDで-$1程度 / それ以上下げたい場合はDBだけ外部マネージド（Neon等の無料枠）に出す選択肢があるが、T-1の構成と運用が分裂するためコストが痛くなってから検討
+- 金額は概算。着手時に[公式料金](https://cloud.google.com/sql/pricing)で再確認する
 
 ## O-2 監視・エラートラッキング
 
@@ -53,7 +78,7 @@
 
 ## O-3 バックアップ
 
-**決定: Cloud SQL自動バックアップ（日次・7世代）+ PITR（ポイントインタイムリカバリ）有効化。リストア手順を docs に残し、stgで四半期に1回リハーサルする。**
+**決定: Cloud SQL自動バックアップ（日次・7世代）+ PITR（ポイントインタイムリカバリ）有効化。リストア手順を docs に残し、半年に1回「バックアップから一時インスタンスへ復元→確認→破棄」のリハーサルを行う**（stg廃止に伴い一時インスタンス方式に変更）。
 
 - 自動バックアップ: 日次（深夜帯）、保持7日
 - PITR: トランザクションログ保持7日（「昨日の操作ミスで予定が消えた」に分単位で戻せる。家族の予定は消えたら致命的、の要件に対する主対策）
@@ -72,7 +97,7 @@
 | presentation/front | コンポーネント単体は最小限。ロジックはhooks/domainに寄せてそちらでテスト | Vitest + Testing Library |
 | E2E | クリティカルパス2本のみ: (1)サインアップ→メンバー追加→予定作成→カレンダー表示 (2)買い物リスト追加→別セッションでリアルタイム反映確認 | Playwright |
 
-- CI（T-8）でユニット+統合を必須チェック化。E2Eはstgデプロイ後にスモークとして実行
+- CI（T-8）でユニット+統合+E2Eを必須チェック化（E2EはCI内で起動したローカル環境相手に実行。stg廃止のため、デプロイ後は書き込みを伴わないヘルスチェックのみ）
 - ユニット・統合テストのファイルはソース隣接（co-location、`*.test.ts`）。E2Eコードのみモノレポ直下の `e2e/` workspaceに置く（plainerの`e2e/`構成: `tests/` / `fixtures/` / `helpers/` を踏襲）
 - 繰り返し予定まわりはバグ密度が最も高くなる箇所と想定し、RRULEラッパを `packages/domain`（event配下）に隔離して集中的にテストする
 

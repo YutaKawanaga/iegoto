@@ -35,17 +35,19 @@
   - plainerから移植する規約: 「SELECT * 禁止・具体カラム明示」の思想はPrismaでは`select`指定の徹底として運用（デフォルトの全カラム取得を大きなテーブルで多用しない）
 - Firestoreを併用しない（T-2参照。ストアを2つ持つ運用コストを避ける）
 
-## T-2 リアルタイム反映: **SSE（Server-Sent Events）+ Postgres LISTEN/NOTIFY、フォールバックでポーリング** — 確定
+## T-2 リアルタイム反映: **MVPは5秒ポーリング。SSE + LISTEN/NOTIFYは後付け拡張として設計のみ保持** — 確定（セルフレビューで段階化）
 
-- 方式:
-  - クライアントは家族単位のSSEストリーム `GET /families/:id/events-stream` を購読
-  - 書き込みはすべて通常のHTTP API。コミット後に `NOTIFY family_{id}` を発行し、SSEハンドラが「変更あり」イベント（種別+対象ID のみの軽量ペイロード）を配信、クライアントが再取得
-  - SSE切断時・非対応時は5秒ポーリングにフォールバック（画面がフォアグラウンドの間のみ）
-- 採用理由:
-  - 要件は「数秒以内の反映」（§6）かつ通信は**サーバ→クライアントの単方向で足りる**（書き込みはHTTPでよい）ので、WebSocketは過剰。SSEはHTTP/1.1の範囲で動きCloud Runのストリーミングレスポンスでそのまま使える
-  - Firestoreリスナー案はT-1でPostgresを選んだ時点で消える（リアルタイムのためだけに2ストア同期を持つのは本末転倒)
-  - LISTEN/NOTIFYはCloud Runの複数インスタンス間のイベント伝播をDB経由で解決する最小構成。Pub/Sub等は家族規模のトラフィックでは不要
-- 留意点: Cloud RunでSSEを張る間はインスタンスが保持される（課金影響は小規模なら軽微）。リクエストタイムアウト（最大60分）ごとにクライアント側で自動再接続する
+- **MVPの方式: フォアグラウンド時のみの5秒ポーリング**
+  - 画面が可視（`visibilitychange`）の間だけ、表示中データの変更チェックを5秒間隔で実行
+  - 要件は「数秒以内の反映」（§6）であり、5秒ポーリングで充足する
+- SSEを初手で実装しない理由（セルフレビューでの判断）:
+  - PrismaはLISTEN/NOTIFY非対応のため、通知用に生pgクライアントの常駐接続を別途持つ必要があり、実装コストが見た目より高い
+  - SSE接続を張っている間はCloud Runインスタンスが保持され続け、実質min-instance相当の常時課金になる（ポーリングはscale-to-zeroを保てる。O-1のコスト試算参照）
+- **後付けの拡張パス（設計は保持）**: 体感が不満になったらSSE + Postgres LISTEN/NOTIFYを追加する
+  - 家族単位のSSEストリーム `GET /families/:id/events-stream`、コミット後に`NOTIFY family_{id}`、
+    「変更あり」イベント（種別+対象IDのみ）を受けてクライアントが再取得。ポーリングはフォールバックに降格
+  - フロントは`use-realtime.ts`に検知方式を隠蔽してあり（`06-frontend-design.md`）、差し替えはhook内部の変更で済む
+- WebSocketは不採用確定（単方向で足りる）。FirestoreリスナーはT-1でPostgresを選んだ時点で消滅
 
 ## T-3 API形式: **tRPC** — 確定（R-2の結果を反映）
 
@@ -118,15 +120,15 @@
   - OAuthスコープは `calendar.readonly` のみ要求（読み取り専用連携の要件に合わせ最小権限）
   - 連携解除時はtokenをrevoke（`oauth2.revoke`）してから削除
 
-## T-8 CI/CD: **GitHub Actions + Workload Identity Federation** — 確定
+## T-8 CI/CD: **GitHub Actions + Workload Identity Federation** — 確定（環境のprod一本化を反映）
 
 - アプリ:
-  - PR: lint（Biome or ESLint）/ typecheck / unit test / build を必須チェック化
-  - `main` merge → stg へ自動デプロイ（Cloud Run）
-  - prod へは GitHub Environments の手動承認付きで同一イメージをプロモート（stgで動いたイメージをそのまま出す）
+  - PR: lint（Biome）/ typecheck / unit + 統合テスト / build / E2E（ローカル環境相手）を必須チェック化
+  - `main` merge → **prod へ自動デプロイ**（クラウド環境はprodのみ。O-1。品質担保はPR CIに寄せる）
+  - デプロイ後はヘルスチェック + 失敗時に前リビジョンへのロールバック（Cloud Runのリビジョン切替）
 - Terraform:
   - PR: `terraform plan` の結果をPRコメントに出力
-  - merge → stg に `apply`、prod は手動承認後に `apply`
+  - `apply` はmerge後に**手動承認**（GitHub Environments）。アプリと違いインフラ変更は破壊的になりうるため承認を残す
 - 認証: サービスアカウントキーは発行せず **Workload Identity Federation** でキーレス化
 - コンテナ: Artifact Registry。イメージタグはgit SHA
 
@@ -137,10 +139,10 @@
 | # | 論点 | 決定 | 状態 |
 |---|---|---|---|
 | T-1 | DB | Cloud SQL (PostgreSQL) + Prisma | **確定**（JOOQはKotlin専用のため「合わせる」対象なし） |
-| T-2 | リアルタイム | SSE + LISTEN/NOTIFY、ポーリングfallback | 確定 |
+| T-2 | リアルタイム | **MVPは5秒ポーリング**（SSE + LISTEN/NOTIFYは後付け拡張） | 確定 |
 | T-3 | API | tRPC | **確定**（plainerのREST+生成パイプラインは言語境界用の装置であり不採用。hooksの書き味は同型） |
 | T-4 | フロント | **Vite + React SPA（React Router）** | **確定**（plainerのfrontに合わせNext.js案を破棄。認証はバックエンドOAuth+セッションクッキーに変更） |
 | T-5 | バック | Hono + tRPC + 自前DDDレイヤ | **確定**（plainerはKotlin/Ktorのため構造規約のみ移植） |
 | T-6 | モノレポ | pnpm workspace + Turborepo | 確定 |
 | T-7 | Google同期 | Schedulerポーリング + syncToken差分、token暗号化保存 | 確定 |
-| T-8 | CI/CD | GitHub Actions + WIF、stg自動/prod承認 | 確定 |
+| T-8 | CI/CD | GitHub Actions + WIF、main merge→prod自動（Terraform applyのみ承認） | 確定 |
