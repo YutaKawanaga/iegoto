@@ -1,8 +1,7 @@
-import { rankSuggestions } from '@iegoto/domain'
 import { EventRepository } from '@iegoto/db'
+import { rankSuggestions, utcToWall } from '@iegoto/domain'
 import type { FamilyContext } from '../../../trpc.js'
 import { FAMILY_TIMEZONE } from './list-events-in-range.js'
-import { utcToWall } from '@iegoto/domain'
 
 /**
  * 過去予定サジェスト (S-5): 家族全員・直近1年・前方一致優先・同一タイトル集約・最大5件。
@@ -42,7 +41,9 @@ export async function suggestPastEvents(
 function toSuggestOutput(event: {
   title: string
   location: string | null
-  time: { kind: 'timed'; startAt: Date; endAt: Date; timezone: string } | { kind: 'allDay'; startDate: string; endDate: string }
+  time:
+    | { kind: 'timed'; startAt: Date; endAt: Date; timezone: string }
+    | { kind: 'allDay'; startDate: string; endDate: string }
   targetMemberIds: string[]
   assigneeMemberId: string | null
 }): SuggestOutput {

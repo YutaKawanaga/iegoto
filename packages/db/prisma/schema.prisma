@@ -4,11 +4,15 @@
 generator client {
   provider = "prisma-client-js"
   output   = "../src/generated/client"
+  // native = ローカル / rhel-openssl-3.0.x = Vercel Functions ランタイム (10-vercel-hosting.md)
+  binaryTargets = ["native", "rhel-openssl-3.0.x"]
 }
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
+  // DATABASE_URL = pooler 接続 (実行時)。DIRECT_URL = 直接接続 (migrate 用。Neon の Direct connection)
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 /// 家族 = テナントの器

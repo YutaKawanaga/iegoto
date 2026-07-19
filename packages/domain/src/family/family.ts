@@ -1,5 +1,5 @@
-import { type FamilyId, newId } from '../shared/id.js'
 import { DomainError } from '../shared/errors.js'
+import { type FamilyId, newId } from '../shared/id.js'
 
 export type Family = {
   id: FamilyId

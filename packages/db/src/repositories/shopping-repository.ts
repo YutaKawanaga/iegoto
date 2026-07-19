@@ -8,10 +8,7 @@ import type {
 } from '@iegoto/domain'
 import { toId } from '@iegoto/domain'
 import type { Tx } from '../client.js'
-import type {
-  ShoppingItem as ItemRow,
-  ShoppingList as ListRow,
-} from '../generated/client/index.js'
+import type { ShoppingItem as ItemRow, ShoppingList as ListRow } from '../generated/client/index.js'
 
 function listFromRow(row: ListRow): ShoppingList {
   return {
@@ -29,7 +26,8 @@ function itemFromRow(row: ItemRow): ShoppingItem {
     name: row.name,
     addedByMemberId: toId<'Member'>(row.addedByMemberId),
     checkedAt: row.checkedAt,
-    checkedByMemberId: row.checkedByMemberId === null ? null : toId<'Member'>(row.checkedByMemberId),
+    checkedByMemberId:
+      row.checkedByMemberId === null ? null : toId<'Member'>(row.checkedByMemberId),
   }
 }
 

@@ -1,5 +1,11 @@
 import { DomainError } from '../shared/errors.js'
-import { type FamilyId, type MemberId, type ShoppingItemId, type ShoppingListId, newId } from '../shared/id.js'
+import {
+  type FamilyId,
+  type MemberId,
+  newId,
+  type ShoppingItemId,
+  type ShoppingListId,
+} from '../shared/id.js'
 
 export type ShoppingList = {
   id: ShoppingListId

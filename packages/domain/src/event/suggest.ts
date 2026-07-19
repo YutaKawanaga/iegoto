@@ -44,8 +44,6 @@ export function rankSuggestions<T>(
       rank: c.normalizedTitle.startsWith(q) ? 0 : c.normalizedTitle.includes(q) ? 1 : 2,
     }))
     .filter((x) => x.rank < 2)
-  matched.sort(
-    (a, b) => a.rank - b.rank || b.c.lastUsedAt.getTime() - a.c.lastUsedAt.getTime(),
-  )
+  matched.sort((a, b) => a.rank - b.rank || b.c.lastUsedAt.getTime() - a.c.lastUsedAt.getTime())
   return matched.slice(0, max).map((x) => x.c.payload)
 }

@@ -51,9 +51,7 @@ describe('splitEventAtOccurrence: これ以降すべて', () => {
       '2026-01-05T07:00:00.000Z',
       '2026-01-12T07:00:00.000Z',
     ])
-    expect(result.updatedOldMaster.recurrenceEndAt?.toISOString()).toBe(
-      '2026-01-12T08:00:00.000Z',
-    )
+    expect(result.updatedOldMaster.recurrenceEndAt?.toISOString()).toBe('2026-01-12T08:00:00.000Z')
 
     const newOccs = expandEvent(result.newMaster, [], q1)
     expect(startInstantOf(newOccs[0] as NonNullable<(typeof newOccs)[0]>).toISOString()).toBe(

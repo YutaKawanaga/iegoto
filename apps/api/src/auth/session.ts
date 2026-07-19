@@ -1,9 +1,9 @@
 import { randomBytes } from 'node:crypto'
+import { type Db, SessionRepository } from '@iegoto/db'
 import type { SessionId, UserAccountId } from '@iegoto/domain'
 import { toId } from '@iegoto/domain'
-import { type Db, SessionRepository } from '@iegoto/db'
 import type { Context } from 'hono'
-import { getCookie, setCookie, deleteCookie } from 'hono/cookie'
+import { deleteCookie, getCookie, setCookie } from 'hono/cookie'
 import { isProduction } from '../config/env.js'
 
 export const SESSION_COOKIE = 'iegoto_session'
@@ -14,7 +14,11 @@ export function newSessionId(): SessionId {
 }
 
 /** ログイン成功時に必ず新しいセッション ID を発行する (セッション固定攻撃対策。07 §8) */
-export async function issueSession(c: Context, db: Db, userAccountId: UserAccountId): Promise<void> {
+export async function issueSession(
+  c: Context,
+  db: Db,
+  userAccountId: UserAccountId,
+): Promise<void> {
   const id = newSessionId()
   await new SessionRepository(db).create({
     id,

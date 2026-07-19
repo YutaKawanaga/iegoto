@@ -1,7 +1,7 @@
 import { utcMidnightToDateString, utcToWall, wallToUtc } from '../shared/tz.js'
 import { type Event, type EventTime, eventDurationMs, eventStartInstant } from './event.js'
 import type { EventOverride } from './override.js'
-import { MAX_OCCURRENCES, buildRule } from './recurrence-rule.js'
+import { buildRule, MAX_OCCURRENCES } from './recurrence-rule.js'
 
 /** カレンダー表示用に展開された1回分の予定 (03-domain-model.md §3) */
 export type Occurrence = {
@@ -30,9 +30,7 @@ function occurrenceEnd(time: EventTime): Date {
   if (time.kind === 'timed') {
     return time.endAt
   }
-  return new Date(
-    new Date(`${time.endDate}T00:00:00Z`).getTime() + 24 * 60 * 60 * 1000,
-  )
+  return new Date(new Date(`${time.endDate}T00:00:00Z`).getTime() + 24 * 60 * 60 * 1000)
 }
 
 function baseOccurrence(event: Event, originalStartAt: Date, time: EventTime): Occurrence {

@@ -1,5 +1,5 @@
-import { MEMBER_COLORS, type MemberColor, createMember } from '@iegoto/domain'
 import { MemberRepository } from '@iegoto/db'
+import { createMember, MEMBER_COLORS, type MemberColor } from '@iegoto/domain'
 import type { FamilyContext } from '../../../trpc.js'
 
 /** F-01: プロフィール追加 (ログイン不要のメンバー。子ども等) */

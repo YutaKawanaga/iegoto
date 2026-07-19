@@ -1,5 +1,5 @@
 import type { Event } from './event.js'
-import { type Occurrence, expandEvent, startInstantOf } from './expand.js'
+import { expandEvent, type Occurrence, startInstantOf } from './expand.js'
 import type { EventOverride } from './override.js'
 
 /** リマインダー探索の上限 (無期限の繰り返しでも2年先まで見れば十分) */
@@ -10,11 +10,7 @@ const SEARCH_HORIZON_MS = 2 * 365 * 24 * 60 * 60 * 1000
  * event.next_reminder_at の事前計算に使う (03 §4 dispatchReminders。
  * 書き込み時と発火後に呼び、毎分の全件 RRULE 展開を避ける)
  */
-export function nextReminderAt(
-  event: Event,
-  overrides: EventOverride[],
-  after: Date,
-): Date | null {
+export function nextReminderAt(event: Event, overrides: EventOverride[], after: Date): Date | null {
   const minutes = event.reminderMinutesBefore
   if (minutes === null) {
     return null

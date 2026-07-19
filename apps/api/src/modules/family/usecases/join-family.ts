@@ -1,11 +1,11 @@
+import { FamilyRepository, InvitationRepository, MemberRepository } from '@iegoto/db'
 import {
-  MEMBER_COLORS,
-  type MemberColor,
   createMember,
   isInvitationUsable,
+  MEMBER_COLORS,
+  type MemberColor,
   toId,
 } from '@iegoto/domain'
-import { FamilyRepository, InvitationRepository, MemberRepository } from '@iegoto/db'
 import { TRPCError } from '@trpc/server'
 import type { TrpcContext } from '../../../trpc.js'
 import { hashInvitationToken } from './invitation-token.js'
@@ -63,7 +63,10 @@ export async function joinFamilyByInvitation(
   const memberRepo = new MemberRepository(ctx.db)
   const existing = await memberRepo.findActiveByUserAccount(ctx.userAccountId)
   if (existing !== null) {
-    throw new TRPCError({ code: 'CONFLICT', message: 'すでに家族に所属しています (S-7: 1ユーザー1家族)' })
+    throw new TRPCError({
+      code: 'CONFLICT',
+      message: 'すでに家族に所属しています (S-7: 1ユーザー1家族)',
+    })
   }
   const invitation = await new InvitationRepository(ctx.db).findByTokenHash(
     hashInvitationToken(input.token),
@@ -81,7 +84,10 @@ export async function joinFamilyByInvitation(
       }
       const target = await txMembers.find(familyId, toId<'Member'>(input.memberId))
       if (target === null || target.userAccountId !== null || target.deletedAt !== null) {
-        throw new TRPCError({ code: 'BAD_REQUEST', message: 'このプロフィールには紐づけできません' })
+        throw new TRPCError({
+          code: 'BAD_REQUEST',
+          message: 'このプロフィールには紐づけできません',
+        })
       }
       await txMembers.linkUserAccount(familyId, target.id, ctx.userAccountId)
       return { familyId }

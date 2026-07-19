@@ -1,5 +1,10 @@
-import { type EventTime, createEvent as createEventEntity, nextReminderAt, toId } from '@iegoto/domain'
 import { EventRepository, MemberRepository } from '@iegoto/db'
+import {
+  createEvent as createEventEntity,
+  type EventTime,
+  nextReminderAt,
+  toId,
+} from '@iegoto/domain'
 import { TRPCError } from '@trpc/server'
 import type { FamilyContext } from '../../../trpc.js'
 
@@ -30,7 +35,8 @@ export async function createEvent(
     time: input.time,
     rrule: input.rrule ?? null,
     targetMemberIds: input.targetMemberIds.map((id) => toId<'Member'>(id)),
-    assigneeMemberId: input.assigneeMemberId == null ? null : toId<'Member'>(input.assigneeMemberId),
+    assigneeMemberId:
+      input.assigneeMemberId == null ? null : toId<'Member'>(input.assigneeMemberId),
     reminderMinutesBefore: input.reminderMinutesBefore ?? null,
     createdByMemberId: ctx.memberId,
   })

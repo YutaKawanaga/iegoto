@@ -1,5 +1,5 @@
 import { DomainError } from '../shared/errors.js'
-import { type FamilyId, type MemberId, type UserAccountId, newId } from '../shared/id.js'
+import { type FamilyId, type MemberId, newId, type UserAccountId } from '../shared/id.js'
 
 /** メンバーカラーのプリセット。web 側の CSS variables (--member-*) と1:1 (06 §5) */
 export const MEMBER_COLORS = [

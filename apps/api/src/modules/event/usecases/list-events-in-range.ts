@@ -1,5 +1,5 @@
-import { expandEvents, utcToWall } from '@iegoto/domain'
 import { EventRepository, type QueryRange } from '@iegoto/db'
+import { expandEvents, utcToWall } from '@iegoto/domain'
 import type { FamilyContext } from '../../../trpc.js'
 import { type OccurrenceOutput, toOccurrenceOutput } from '../serialize.js'
 

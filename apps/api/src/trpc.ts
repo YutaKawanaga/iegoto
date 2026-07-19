@@ -1,8 +1,9 @@
+import { type Db, getDb, MemberRepository } from '@iegoto/db'
 import { DomainError, type FamilyId, type MemberId, type UserAccountId } from '@iegoto/domain'
-import { type Db, MemberRepository, getDb } from '@iegoto/db'
 import { FeatureFlags } from '@iegoto/feature-flags'
-import { TRPCError, initTRPC } from '@trpc/server'
+import { initTRPC, TRPCError } from '@trpc/server'
 import type { Context as HonoContext } from 'hono'
+import superjson from 'superjson'
 import flagsJson from '../../../flags/feature-flags.json' with { type: 'json' }
 import { resolveSession } from './auth/session.js'
 
@@ -28,6 +29,7 @@ export async function createContext(c: HonoContext): Promise<TrpcContext> {
 }
 
 const t = initTRPC.context<TrpcContext>().create({
+  transformer: superjson, // Date を境界でそのまま扱う (client 側 httpBatchLink と対)
   errorFormatter({ shape, error }) {
     // DomainError はコードだけをフロントへ渡す (詳細スタックは漏らさない)
     const cause = error.cause

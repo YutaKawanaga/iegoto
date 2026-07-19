@@ -5,7 +5,11 @@ import type {
   OverridePatch,
 } from '@iegoto/domain'
 import { toId } from '@iegoto/domain'
-import type { Event as EventRow, EventOverride as OverrideRow, EventTarget } from '../generated/client/index.js'
+import type {
+  Event as EventRow,
+  EventTarget,
+  EventOverride as OverrideRow,
+} from '../generated/client/index.js'
 
 type EventRowWithRelations = EventRow & { targets: EventTarget[]; overrides: OverrideRow[] }
 

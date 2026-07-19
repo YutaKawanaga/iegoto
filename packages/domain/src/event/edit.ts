@@ -112,9 +112,7 @@ export function splitEventAtOccurrence(
   }
 
   const splitWall =
-    event.time.kind === 'timed'
-      ? utcToWall(originalStartAt, event.time.timezone)
-      : originalStartAt
+    event.time.kind === 'timed' ? utcToWall(originalStartAt, event.time.timezone) : originalStartAt
   const truncatedRRule = truncateRRuleBefore(event.rrule, splitWall)
   const updatedOldMaster: Event = {
     ...event,

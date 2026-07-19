@@ -1,6 +1,13 @@
+import { InvitationRepository } from '@iegoto/db'
 import { z } from 'zod'
 import { authedProcedure, familyProcedure, featureFlags, router } from '../trpc.js'
 import { getMe } from './account/usecases/get-me.js'
+import { createEvent } from './event/usecases/create-event.js'
+import { deleteEvent } from './event/usecases/delete-event.js'
+import { listMyAssignedEvents, listUnassignedEvents } from './event/usecases/list-assignments.js'
+import { listEventsInRange } from './event/usecases/list-events-in-range.js'
+import { suggestPastEvents } from './event/usecases/suggest-past-events.js'
+import { updateEvent } from './event/usecases/update-event.js'
 import { issueInvitation } from './family/usecases/issue-invitation.js'
 import { joinFamilyByInvitation, previewInvitation } from './family/usecases/join-family.js'
 import { signUpFamily } from './family/usecases/sign-up-family.js'
@@ -8,15 +15,13 @@ import { addMember } from './member/usecases/add-member.js'
 import { leaveFamily } from './member/usecases/leave-family.js'
 import { softDeleteMember } from './member/usecases/soft-delete-member.js'
 import { updateMember } from './member/usecases/update-member.js'
-import { createEvent } from './event/usecases/create-event.js'
-import { deleteEvent } from './event/usecases/delete-event.js'
-import { listMyAssignedEvents, listUnassignedEvents } from './event/usecases/list-assignments.js'
-import { listEventsInRange } from './event/usecases/list-events-in-range.js'
-import { suggestPastEvents } from './event/usecases/suggest-past-events.js'
-import { updateEvent } from './event/usecases/update-event.js'
+import {
+  editScopeSchema,
+  eventChangesSchema,
+  eventTimeSchema,
+  memberColorSchema,
+} from './schemas.js'
 import * as shopping from './shopping/usecases/shopping-usecases.js'
-import { InvitationRepository } from '@iegoto/db'
-import { editScopeSchema, eventChangesSchema, eventTimeSchema, memberColorSchema } from './schemas.js'
 
 /**
  * tRPC router (07 §3): procedure は「入力検証 → ctx → usecase 呼び出し」だけの薄い adapter。
@@ -29,7 +34,12 @@ export const appRouter = router({
 
   family: router({
     signUp: authedProcedure
-      .input(z.object({ familyName: z.string().min(1).max(50), myDisplayName: z.string().min(1).max(30) }))
+      .input(
+        z.object({
+          familyName: z.string().min(1).max(50),
+          myDisplayName: z.string().min(1).max(30),
+        }),
+      )
       .mutation(({ ctx, input }) => signUpFamily(ctx, input)),
     invitation: router({
       issue: familyProcedure.mutation(({ ctx }) => issueInvitation(ctx)),
@@ -58,7 +68,9 @@ export const appRouter = router({
 
   member: router({
     add: familyProcedure
-      .input(z.object({ displayName: z.string().min(1).max(30), color: memberColorSchema.optional() }))
+      .input(
+        z.object({ displayName: z.string().min(1).max(30), color: memberColorSchema.optional() }),
+      )
       .mutation(({ ctx, input }) => addMember(ctx, input)),
     update: familyProcedure
       .input(
@@ -89,7 +101,13 @@ export const appRouter = router({
           rrule: z.string().max(500).nullable().optional(),
           targetMemberIds: z.array(z.string().uuid()).max(20),
           assigneeMemberId: z.string().uuid().nullable().optional(),
-          reminderMinutesBefore: z.number().int().min(0).max(7 * 24 * 60).nullable().optional(),
+          reminderMinutesBefore: z
+            .number()
+            .int()
+            .min(0)
+            .max(7 * 24 * 60)
+            .nullable()
+            .optional(),
         }),
       )
       .mutation(({ ctx, input }) => createEvent(ctx, input)),

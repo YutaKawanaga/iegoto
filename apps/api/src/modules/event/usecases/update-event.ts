@@ -1,14 +1,14 @@
+import { EventRepository } from '@iegoto/db'
 import {
+  applyAllEdit,
+  buildThisOnlyOverride,
   type EditScope,
   type EventChanges,
   type EventTime,
-  applyAllEdit,
-  buildThisOnlyOverride,
   nextReminderAt,
   splitEventAtOccurrence,
   toId,
 } from '@iegoto/domain'
-import { EventRepository } from '@iegoto/db'
 import { TRPCError } from '@trpc/server'
 import type { FamilyContext } from '../../../trpc.js'
 import { assertMembersBelongToFamily } from './create-event.js'
@@ -95,7 +95,9 @@ export async function updateEvent(ctx: FamilyContext, input: UpdateEventInput): 
   await ctx.db.$transaction(async (tx) => {
     const repo = new EventRepository(tx)
     const oldOverrides = overrides.filter(
-      (o) => !result.droppedOverrideIds.includes(o.id) && !result.movedOverrides.some((m) => m.id === o.id),
+      (o) =>
+        !result.droppedOverrideIds.includes(o.id) &&
+        !result.movedOverrides.some((m) => m.id === o.id),
     )
     await repo.save(
       ctx.familyId,

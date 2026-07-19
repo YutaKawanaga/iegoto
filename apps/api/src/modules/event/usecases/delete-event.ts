@@ -1,13 +1,13 @@
+import { EventRepository } from '@iegoto/db'
 import {
-  type EditScope,
   buildCancelOverride,
   computeRecurrenceEndAt,
+  type EditScope,
   nextReminderAt,
   toId,
   truncateRRuleBefore,
   utcToWall,
 } from '@iegoto/domain'
-import { EventRepository } from '@iegoto/db'
 import { TRPCError } from '@trpc/server'
 import type { FamilyContext } from '../../../trpc.js'
 
@@ -40,7 +40,9 @@ export async function deleteEvent(ctx: FamilyContext, input: DeleteEventInput): 
   const originalStartAt = input.originalStartAt
 
   if (input.scope === 'this') {
-    const existing = overrides.find((o) => o.originalStartAt.getTime() === originalStartAt.getTime())
+    const existing = overrides.find(
+      (o) => o.originalStartAt.getTime() === originalStartAt.getTime(),
+    )
     const cancel = buildCancelOverride(event, originalStartAt, existing)
     const newOverrides = [...overrides.filter((o) => o.id !== cancel.id), cancel]
     const reminder = nextReminderAt(event, newOverrides, now)

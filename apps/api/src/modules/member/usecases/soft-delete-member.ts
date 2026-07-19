@@ -1,5 +1,5 @@
-import { toId } from '@iegoto/domain'
 import { EventRepository, MemberRepository } from '@iegoto/db'
+import { toId } from '@iegoto/domain'
 import { TRPCError } from '@trpc/server'
 import type { FamilyContext } from '../../../trpc.js'
 

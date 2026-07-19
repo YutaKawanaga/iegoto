@@ -1,5 +1,4 @@
-import { SessionRepository } from '@iegoto/db'
-import { MemberRepository } from '@iegoto/db'
+import { MemberRepository, SessionRepository } from '@iegoto/db'
 import type { FamilyContext } from '../../../trpc.js'
 
 /** S-3 退出: 自分のプロフィールからログイン紐づけを外す (プロフィール・予定は残る)。全セッションも破棄 */

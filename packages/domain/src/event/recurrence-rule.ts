@@ -1,5 +1,9 @@
-import { RRule } from 'rrule'
+// rrule は CJS のため Node ESM では named import できない (default 経由で取り出す)
+import rrulePkg from 'rrule'
+import type { RRule as RRuleClass } from 'rrule'
 import { InvalidRecurrenceRuleError } from '../shared/errors.js'
+
+const { RRule } = rrulePkg
 import { utcToWall, wallToUtc } from '../shared/tz.js'
 import { type EventTime, eventDurationMs } from './event.js'
 
@@ -25,7 +29,7 @@ export function parseRRuleBody(body: string): ReturnType<typeof RRule.parseStrin
  * dtstart は「イベント TZ の壁時計時刻を UTC フィールドに持つ Date」(wall fake UTC)。
  * S-4: 展開はローカル時刻で行い UTC に戻す方式の中核
  */
-export function buildRule(rruleBody: string, time: EventTime): RRule {
+export function buildRule(rruleBody: string, time: EventTime): RRuleClass {
   const options = parseRRuleBody(rruleBody)
   const dtstart =
     time.kind === 'timed'
@@ -65,10 +69,8 @@ export function truncateRRuleBefore(rruleBody: string, splitWallStart: Date): st
   return optionsToBody(truncated)
 }
 
-function optionsToBody(rule: RRule): string {
+function optionsToBody(rule: RRuleClass): string {
   const str = rule.toString()
-  const line = str
-    .split('\n')
-    .find((l) => l.startsWith('RRULE:'))
+  const line = str.split('\n').find((l) => l.startsWith('RRULE:'))
   return (line ?? str).replace(/^RRULE:/, '')
 }

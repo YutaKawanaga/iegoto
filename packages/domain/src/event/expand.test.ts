@@ -161,7 +161,11 @@ describe('expandEvent: 終日予定 (date型・TZ非依存)', () => {
       end: new Date('2027-02-01T00:00:00Z'),
     })
     expect(occs).toHaveLength(1)
-    expect(occs[0]?.time).toEqual({ kind: 'allDay', startDate: '2027-01-15', endDate: '2027-01-15' })
+    expect(occs[0]?.time).toEqual({
+      kind: 'allDay',
+      startDate: '2027-01-15',
+      endDate: '2027-01-15',
+    })
   })
 
   test('複数日にまたがる終日予定の期間が保たれる', () => {
@@ -177,7 +181,11 @@ describe('expandEvent: 終日予定 (date型・TZ非依存)', () => {
       start: new Date('2026-02-01T00:00:00Z'),
       end: new Date('2026-03-01T00:00:00Z'),
     })
-    expect(occs[0]?.time).toEqual({ kind: 'allDay', startDate: '2026-02-02', endDate: '2026-02-04' })
+    expect(occs[0]?.time).toEqual({
+      kind: 'allDay',
+      startDate: '2026-02-02',
+      endDate: '2026-02-04',
+    })
   })
 })
 

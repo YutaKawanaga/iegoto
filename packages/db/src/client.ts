@@ -2,7 +2,10 @@ import { PrismaClient } from './generated/client/index.js'
 
 export type Db = PrismaClient
 /** $transaction のコールバックに渡るトランザクションスコープのクライアント */
-export type Tx = Omit<PrismaClient, '$connect' | '$disconnect' | '$on' | '$transaction' | '$use' | '$extends'>
+export type Tx = Omit<
+  PrismaClient,
+  '$connect' | '$disconnect' | '$on' | '$transaction' | '$use' | '$extends'
+>
 
 let singleton: PrismaClient | undefined
 

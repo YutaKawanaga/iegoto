@@ -24,6 +24,7 @@ jobs:
           --health-retries 10
     env:
       DATABASE_URL: postgresql://iegoto:iegoto@localhost:5432/iegoto_test
+      DIRECT_URL: postgresql://iegoto:iegoto@localhost:5432/iegoto_test
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4

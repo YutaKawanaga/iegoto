@@ -1,8 +1,7 @@
-import { Google, decodeIdToken, generateCodeVerifier, generateState } from 'arctic'
-import { UserAccountRepository } from '@iegoto/db'
+import { getDb, UserAccountRepository } from '@iegoto/db'
+import { decodeIdToken, Google, generateCodeVerifier, generateState } from 'arctic'
 import { Hono } from 'hono'
-import { getCookie, setCookie, deleteCookie } from 'hono/cookie'
-import { getDb } from '@iegoto/db'
+import { deleteCookie, getCookie, setCookie } from 'hono/cookie'
 import { isProduction, loadEnv } from '../config/env.js'
 import { destroySession, issueSession } from './session.js'
 

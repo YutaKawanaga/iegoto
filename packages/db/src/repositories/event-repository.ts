@@ -186,7 +186,7 @@ export class EventRepository {
     })
   }
 
-  async moveOverrides(familyId: FamilyId, overrides: DomainOverride[]): Promise<void> {
+  async moveOverrides(_familyId: FamilyId, overrides: DomainOverride[]): Promise<void> {
     for (const o of overrides) {
       await this.tx.eventOverride.update({
         where: { id: o.id },
@@ -195,7 +195,7 @@ export class EventRepository {
     }
   }
 
-  async deleteOverrides(familyId: FamilyId, ids: EventOverrideId[]): Promise<void> {
+  async deleteOverrides(_familyId: FamilyId, ids: EventOverrideId[]): Promise<void> {
     if (ids.length === 0) {
       return
     }

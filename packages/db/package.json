@@ -10,9 +10,9 @@
     "generate": "prisma generate",
     "migrate:dev": "prisma migrate dev",
     "migrate:deploy": "prisma migrate deploy",
-    "build": "prisma generate && tsc --noEmit",
-    "typecheck": "prisma generate && tsc --noEmit",
-    "test": "vitest run"
+    "build": "tsc --noEmit",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run --passWithNoTests"
   },
   "prisma": {
     "schema": "prisma/schema.prisma"

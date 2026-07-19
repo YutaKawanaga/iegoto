@@ -1,9 +1,5 @@
-import {
-  createShoppingItem,
-  createShoppingList,
-  toId,
-} from '@iegoto/domain'
 import { ShoppingRepository } from '@iegoto/db'
+import { createShoppingItem, createShoppingList, toId } from '@iegoto/domain'
 import { TRPCError } from '@trpc/server'
 import type { FamilyContext } from '../../../trpc.js'
 
@@ -82,7 +78,10 @@ export async function setItemChecked(
 }
 
 export async function deleteItem(ctx: FamilyContext, input: { itemId: string }) {
-  await new ShoppingRepository(ctx.db).softDeleteItem(ctx.familyId, toId<'ShoppingItem'>(input.itemId))
+  await new ShoppingRepository(ctx.db).softDeleteItem(
+    ctx.familyId,
+    toId<'ShoppingItem'>(input.itemId),
+  )
 }
 
 export async function countUnchecked(ctx: FamilyContext) {

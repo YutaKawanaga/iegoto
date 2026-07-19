@@ -1,5 +1,5 @@
-import { type MemberColor, toId, validateDisplayName } from '@iegoto/domain'
 import { MemberRepository } from '@iegoto/db'
+import { type MemberColor, toId, validateDisplayName } from '@iegoto/domain'
 import type { FamilyContext } from '../../../trpc.js'
 
 export async function updateMember(

@@ -27,7 +27,13 @@ export const eventChangesSchema = z.object({
   rrule: z.string().max(500).nullable().optional(),
   targetMemberIds: z.array(z.string().uuid()).max(20).optional(),
   assigneeMemberId: z.string().uuid().nullable().optional(),
-  reminderMinutesBefore: z.number().int().min(0).max(7 * 24 * 60).nullable().optional(),
+  reminderMinutesBefore: z
+    .number()
+    .int()
+    .min(0)
+    .max(7 * 24 * 60)
+    .nullable()
+    .optional(),
 })
 
 export const editScopeSchema = z.enum(['this', 'following', 'all'])
