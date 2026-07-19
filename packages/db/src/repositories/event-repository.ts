@@ -220,10 +220,31 @@ export class EventRepository {
     })
   }
 
-  /** 対象メンバーから外す (S-3。未来分のみの厳密制御は繰り返しでは困難なため、紐づけ自体を残しUI表示で吸収) */
-  async removeMemberFromTargets(familyId: FamilyId, memberId: MemberId): Promise<void> {
+  /**
+   * S-3: 削除メンバーを未来の予定の対象から外す。
+   * 対象: 未来の単発予定 + 継続中の繰り返しマスタ。
+   * 過去の単発予定の紐づけは保持する (「(削除済み)名前」表示)。
+   * 繰り返しマスタから外すと過去回の表示からも消えるが、マスタ+展開モデルの構造的制約として許容
+   */
+  async removeMemberFromFutureTargets(
+    familyId: FamilyId,
+    memberId: MemberId,
+    now: Date,
+  ): Promise<void> {
     await this.tx.eventTarget.deleteMany({
-      where: { memberId, event: { familyId, deletedAt: null } },
+      where: {
+        memberId,
+        event: {
+          familyId,
+          deletedAt: null,
+          OR: [
+            { rrule: null, isAllDay: false, startAt: { gte: now } },
+            { rrule: null, isAllDay: true, startDate: { gte: now.toISOString().slice(0, 10) } },
+            { rrule: { not: null }, recurrenceEndAt: null },
+            { rrule: { not: null }, recurrenceEndAt: { gte: now } },
+          ],
+        },
+      },
     })
   }
 
