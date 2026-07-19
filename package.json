@@ -1,0 +1,25 @@
+{
+  "name": "iegoto",
+  "private": true,
+  "packageManager": "pnpm@10.33.0",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "dev": "turbo dev",
+    "build": "turbo build",
+    "test": "turbo test",
+    "typecheck": "turbo typecheck",
+    "lint": "biome check .",
+    "lint:fix": "biome check --write .",
+    "validate-flags": "tsx scripts/validate-flags.ts",
+    "db:generate": "pnpm --filter @iegoto/db run generate",
+    "db:migrate": "pnpm --filter @iegoto/db run migrate:dev"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.0.0",
+    "tsx": "^4.19.0",
+    "turbo": "^2.5.0",
+    "typescript": "^5.9.0"
+  }
+}

@@ -1,0 +1,33 @@
+{
+  "name": "@iegoto/db",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "generate": "prisma generate",
+    "migrate:dev": "prisma migrate dev",
+    "migrate:deploy": "prisma migrate deploy",
+    "build": "prisma generate && tsc -p tsconfig.build.json",
+    "typecheck": "prisma generate && tsc --noEmit",
+    "test": "vitest run"
+  },
+  "prisma": {
+    "schema": "prisma/schema.prisma"
+  },
+  "dependencies": {
+    "@iegoto/domain": "workspace:*",
+    "@prisma/client": "^6.16.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.20.1",
+    "prisma": "^6.16.0",
+    "typescript": "^5.9.0",
+    "vitest": "^3.2.0"
+  }
+}

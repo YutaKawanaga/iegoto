@@ -1,0 +1,187 @@
+// iegoto データモデル (docs/design/03-domain-model.md)
+// テナント境界は常に family_id。全 Repository メソッドが familyId を必須引数に取る
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/client"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+/// 家族 = テナントの器
+model Family {
+  id        String   @id @db.Uuid
+  name      String
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz()
+
+  members       Member[]
+  invitations   Invitation[]
+  events        Event[]
+  shoppingLists ShoppingList[]
+
+  @@map("family")
+}
+
+/// Google ログイン主体 (S-1 で Member と分離)
+model UserAccount {
+  id          String   @id @db.Uuid
+  /// Google sub クレーム。email は変わりうるのでキーにしない
+  googleSub   String   @unique @map("google_sub")
+  email       String
+  displayName String   @map("display_name")
+  avatarUrl   String?  @map("avatar_url")
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz()
+
+  members  Member[]
+  sessions Session[]
+
+  @@map("user_account")
+}
+
+/// 家族内プロフィール。user_account_id NULL = ログイン不可 (子ども等)
+model Member {
+  id            String    @id @db.Uuid
+  familyId      String    @map("family_id") @db.Uuid
+  userAccountId String?   @map("user_account_id") @db.Uuid
+  displayName   String    @map("display_name")
+  /// メンバーカラー識別子 (domain の MEMBER_COLORS)
+  color         String
+  sortOrder     Int       @map("sort_order")
+  deletedAt     DateTime? @map("deleted_at") @db.Timestamptz()
+  createdAt     DateTime  @default(now()) @map("created_at") @db.Timestamptz()
+
+  family      Family       @relation(fields: [familyId], references: [id])
+  userAccount UserAccount? @relation(fields: [userAccountId], references: [id])
+
+  @@index([familyId])
+  @@map("member")
+}
+
+/// 招待リンク (S-2)。平文トークンは保存しない
+model Invitation {
+  id                String    @id @db.Uuid
+  familyId          String    @map("family_id") @db.Uuid
+  tokenHash         String    @unique @map("token_hash")
+  expiresAt         DateTime  @map("expires_at") @db.Timestamptz()
+  revokedAt         DateTime? @map("revoked_at") @db.Timestamptz()
+  createdByMemberId String    @map("created_by_member_id") @db.Uuid
+  createdAt         DateTime  @default(now()) @map("created_at") @db.Timestamptz()
+
+  family Family @relation(fields: [familyId], references: [id])
+
+  @@index([familyId])
+  @@map("invitation")
+}
+
+/// 予定 (繰り返しマスタ含む)。時間表現は timed (start_at/end_at) / all-day (start_date/end_date) の排他
+model Event {
+  id                    String    @id @db.Uuid
+  familyId              String    @map("family_id") @db.Uuid
+  title                 String
+  /// サジェスト照合用 (S-5)
+  normalizedTitle       String    @map("normalized_title")
+  memo                  String?
+  location              String?
+  isAllDay              Boolean   @map("is_all_day")
+  startAt               DateTime? @map("start_at") @db.Timestamptz()
+  endAt                 DateTime? @map("end_at") @db.Timestamptz()
+  startDate             String?   @map("start_date")
+  endDate               String?   @map("end_date")
+  /// MVP は常に 'Asia/Tokyo' (S-4)
+  timezone              String
+  /// iCal RRULE 本文。NULL = 単発
+  rrule                 String?
+  /// UNTIL/COUNT から事前計算した実終端 (期間クエリ最適化)。無期限は NULL
+  recurrenceEndAt       DateTime? @map("recurrence_end_at") @db.Timestamptz()
+  assigneeMemberId      String?   @map("assignee_member_id") @db.Uuid
+  reminderMinutesBefore Int?      @map("reminder_minutes_before")
+  /// 次回リマインダー発火時刻の事前計算値 (03 §4)
+  nextReminderAt        DateTime? @map("next_reminder_at") @db.Timestamptz()
+  createdByMemberId     String    @map("created_by_member_id") @db.Uuid
+  deletedAt             DateTime? @map("deleted_at") @db.Timestamptz()
+  createdAt             DateTime  @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt             DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz()
+
+  family    Family          @relation(fields: [familyId], references: [id])
+  targets   EventTarget[]
+  overrides EventOverride[]
+
+  @@index([familyId, startAt])
+  @@index([familyId, normalizedTitle])
+  @@index([nextReminderAt])
+  @@map("event")
+}
+
+/// 対象メンバー (誰の予定か。複数可、F-03)
+model EventTarget {
+  eventId  String @map("event_id") @db.Uuid
+  memberId String @map("member_id") @db.Uuid
+
+  event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  @@id([eventId, memberId])
+  @@map("event_target")
+}
+
+/// 繰り返しの例外 (F-03「この予定のみ」)。上書き値は patch (JSONB) に持つ
+model EventOverride {
+  id              String   @id @db.Uuid
+  eventId         String   @map("event_id") @db.Uuid
+  originalStartAt DateTime @map("original_start_at") @db.Timestamptz()
+  isCancelled     Boolean  @map("is_cancelled")
+  /// OverridePatch (domain) のシリアライズ。NULL 継承の意味論を保つため JSONB
+  patch           Json
+  createdAt       DateTime @default(now()) @map("created_at") @db.Timestamptz()
+
+  event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  @@unique([eventId, originalStartAt])
+  @@map("event_override")
+}
+
+model ShoppingList {
+  id        String   @id @db.Uuid
+  familyId  String   @map("family_id") @db.Uuid
+  name      String
+  sortOrder Int      @map("sort_order")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz()
+
+  family Family         @relation(fields: [familyId], references: [id])
+  items  ShoppingItem[]
+
+  @@index([familyId])
+  @@map("shopping_list")
+}
+
+model ShoppingItem {
+  id                String    @id @db.Uuid
+  shoppingListId    String    @map("shopping_list_id") @db.Uuid
+  name              String
+  addedByMemberId   String    @map("added_by_member_id") @db.Uuid
+  checkedAt         DateTime? @map("checked_at") @db.Timestamptz()
+  checkedByMemberId String?   @map("checked_by_member_id") @db.Uuid
+  deletedAt         DateTime? @map("deleted_at") @db.Timestamptz()
+  createdAt         DateTime  @default(now()) @map("created_at") @db.Timestamptz()
+
+  list ShoppingList @relation(fields: [shoppingListId], references: [id])
+
+  @@index([shoppingListId])
+  @@map("shopping_item")
+}
+
+/// DB セッション (07 §8。即時失効可能にするためクッキー完結ではなく DB 方式)
+model Session {
+  id            String   @id
+  userAccountId String   @map("user_account_id") @db.Uuid
+  expiresAt     DateTime @map("expires_at") @db.Timestamptz()
+  createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz()
+
+  userAccount UserAccount @relation(fields: [userAccountId], references: [id], onDelete: Cascade)
+
+  @@index([userAccountId])
+  @@map("session")
+}

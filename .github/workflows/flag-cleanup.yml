@@ -1,0 +1,34 @@
+# cleanupBy を過ぎたフラグを週次で検出し GitHub Issue を起票する (08 §3。plainer の Slack 通知の個人開発版)
+name: Flag cleanup reminder
+
+on:
+  schedule:
+    - cron: '0 0 * * 1' # 月曜 09:00 JST
+  workflow_dispatch:
+
+permissions:
+  issues: write
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Find overdue flags and create issue
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const flags = require('./flags/feature-flags.json').flags
+            const today = new Date().toISOString().slice(0, 10)
+            const overdue = flags.filter(f => f.cleanupBy < today)
+            if (overdue.length === 0) return
+            const title = 'フィーチャーフラグ棚卸し: cleanupBy 超過'
+            const { data: issues } = await github.rest.issues.listForRepo({
+              owner: context.repo.owner, repo: context.repo.repo, state: 'open',
+            })
+            if (issues.some(i => i.title === title)) return
+            await github.rest.issues.create({
+              owner: context.repo.owner, repo: context.repo.repo, title,
+              body: overdue.map(f => `- \`${f.name}\` (期限 ${f.cleanupBy}): ${f.description}`).join('\n'),
+            })
