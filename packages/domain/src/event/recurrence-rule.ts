@@ -1,9 +1,11 @@
 // rrule は CJS のため Node ESM では named import できない (default 経由で取り出す)
-import rrulePkg from 'rrule'
+
 import type { RRule as RRuleClass } from 'rrule'
+import rrulePkg from 'rrule'
 import { InvalidRecurrenceRuleError } from '../shared/errors.js'
 
 const { RRule } = rrulePkg
+
 import { utcToWall, wallToUtc } from '../shared/tz.js'
 import { type EventTime, eventDurationMs } from './event.js'
 
