@@ -122,6 +122,9 @@
 
 ## T-8 CI/CD: **GitHub Actions + Workload Identity Federation** — 確定（環境のprod一本化を反映）
 
+> **2026-07-19注記**: 当面はVercel採用（`10-vercel-hosting.md`）のため、本節のうち**デプロイ部分はVercelのGit連携に
+> 委譲し、Terraformは凍結**。GitHub ActionsはCI（lint/typecheck/test/E2E）専用として維持する。以下はGCP移行時の構成。
+
 - アプリ:
   - PR: lint（Biome）/ typecheck / unit + 統合テスト / build / E2E（ローカル環境相手）を必須チェック化
   - `main` merge → **prod へ自動デプロイ**（クラウド環境はprodのみ。O-1。品質担保はPR CIに寄せる）

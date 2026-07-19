@@ -16,6 +16,7 @@
 | [バックエンド設計書](docs/design/07-backend-design.md) | DDDレイヤ構成・Repository/UseCase規約・テナント分離 |
 | [フィーチャーフラグ方針](docs/design/08-feature-flag.md) | フラグ定義・配信・評価・ライフサイクル運用 |
 | [実装順序](docs/design/09-implementation-order.md) | MVP到達までのフェーズ分け（iOS Pushスパイク・家族投入タイミング含む） |
+| [ホスティング構成](docs/design/10-vercel-hosting.md) | **当面の採用: Vercel+Neon無料構成**（GCP案は04に保持、移行トリガー付き） |
 
 ## ステータス
 

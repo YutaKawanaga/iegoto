@@ -9,7 +9,8 @@
 
 ## フェーズ0: 雛形（すべての前提）
 
-- モノレポ雛形（T-6構成）+ CI（lint / typecheck / test / build）+ Terraform prod一式 + デプロイパイプライン（T-8）
+- モノレポ雛形（T-6構成）+ CI（lint / typecheck / test / build）+ ホスティングセットアップ
+  （当面はVercel + Neon + Scheduler 3ジョブ + 日次バックアップ: `10-vercel-hosting.md`。Terraformは凍結）
 - 認証（Googleログイン+セッション。`07-backend-design.md` §8）
 - **⚠️ iOS Web Pushスパイクをここで実施**（半日〜1日）: 素のPWA+push通知のデモページをiPhone実機で
   「ホーム画面追加→許可→受信」まで確認する。F-08/F-09は全設計の中で最も不安定な外部前提であり、

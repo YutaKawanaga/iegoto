@@ -35,9 +35,9 @@ apps/api/src/
 ├── trpc.ts                        # initTRPC・Context生成・認証/テナントmiddleware
 ├── auth/                          # Google OAuth code flow・セッション（§8）
 ├── sse/                           # (将来拡張枠) 家族単位SSEストリーム（T-2。MVPでは作らない）
-├── jobs/                          # Scheduler起点のHTTPエンドポイント（plainerのroute/job/相当）
-│   ├── sync-google-calendar.ts    #   OIDCトークン検証つき（Scheduler→Cloud Run）
-│   └── dispatch-reminders.ts
+├── jobs/                          # Cloud Scheduler起点のHTTPエンドポイント（plainerのroute/job/相当）
+│   ├── sync-google-calendar.ts    #   認証: Vercel構成=共有シークレットヘッダ / GCP構成=OIDC検証
+│   └── dispatch-reminders.ts      #   （検証は共通のjobAuth middlewareに抽象化して構成差を吸収）
 ├── modules/                       # ドメイン別。tRPC routerとusecaseをco-location（plainer方式）
 │   ├── family/
 │   │   ├── router.ts              # procedureの束。薄いadapterのみ

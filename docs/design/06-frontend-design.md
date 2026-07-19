@@ -19,9 +19,9 @@
 | テスト | Vitest + Testing Library | `hooks/` `utils/` はテスト必須（plainer共通規約） |
 | PWA | `vite-plugin-pwa` + 自前Push用Service Worker | plainerに前例なし。§6で自前設計 |
 
-配信: ビルド成果物はAPI（Hono）と**同一のCloud Runコンテナから配信**する単一オリジン構成
-（CORS不要・セッションクッキーがSameSite=Laxで素直・PWA scopeが`/`で自然。`04-operations.md` O-1）。
-開発時はViteのdevサーバ + `/trpc`等をlocalhost:8000へプロキシ（plainerと同じ構図）。
+配信: SPAとAPIの**単一オリジン構成**（CORS不要・セッションクッキーがSameSite=Laxで素直・PWA scopeが`/`で自然）。
+当面はVercel（静的配信+Functions。`10-vercel-hosting.md`）、GCP移行時はCloud Runコンテナ同梱（`04-operations.md` O-1）。
+どちらでも単一オリジンの原則は不変。開発時はViteのdevサーバ + `/trpc`等をlocalhost:8000へプロキシ（plainerと同じ構図）。
 
 ## 2. ディレクトリ構成
 
