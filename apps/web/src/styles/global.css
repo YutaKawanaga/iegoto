@@ -1,0 +1,43 @@
+@import "tailwindcss";
+
+/*
+ * デザイントークン (06 §5)。
+ * メンバーカラー (F-02 の核心) は必ずこのトークン経由で使う。固定色の直書き禁止。
+ * domain の MEMBER_COLORS と 1:1 対応
+ */
+@theme {
+  --color-background: #faf9f7;
+  --color-foreground: #292524;
+  --color-card: #ffffff;
+  --color-muted: #f1efec;
+  --color-muted-foreground: #78716c;
+  --color-border: #e7e5e1;
+  --color-primary: #0d9488;
+  --color-primary-foreground: #ffffff;
+  --color-destructive: #dc2626;
+  --color-destructive-foreground: #ffffff;
+
+  --color-member-coral: #f87171;
+  --color-member-sky: #38bdf8;
+  --color-member-leaf: #4ade80;
+  --color-member-amber: #fbbf24;
+  --color-member-plum: #c084fc;
+  --color-member-teal: #2dd4bf;
+  --color-member-rose: #fb7185;
+  --color-member-indigo: #818cf8;
+
+  --radius-lg: 0.75rem;
+}
+
+html,
+body {
+  background-color: var(--color-background);
+  color: var(--color-foreground);
+  font-family: "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Noto Sans JP", system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* iOS ホームバー対応 (F-09 PWA 前提のレイアウト) */
+.pb-safe {
+  padding-bottom: env(safe-area-inset-bottom, 0);
+}

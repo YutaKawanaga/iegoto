@@ -18,7 +18,19 @@
 | [実装順序](docs/design/09-implementation-order.md) | MVP到達までのフェーズ分け（iOS Pushスパイク・家族投入タイミング含む） |
 | [ホスティング構成](docs/design/10-vercel-hosting.md) | **当面の採用: Vercel+Neon無料構成**（GCP案は04に保持、移行トリガー付き） |
 
+## 開発
+
+```bash
+cp .env.example .env
+docker compose up -d              # Postgres
+pnpm install && pnpm db:migrate
+pnpm --filter @iegoto/api dev     # API  http://localhost:8000
+pnpm --filter @iegoto/web dev     # Web  http://localhost:7475 (開発用ログインあり)
+```
+
+デプロイ手順は [docs/deploy.md](docs/deploy.md)（Vercel + Neon、無料構成）。
+
 ## ステータス
 
-要件確定・**設計確定**（実装未着手）。plainerリポジトリ参照タスク（R-1〜R-4）は完了し、
-技術選定（T-1〜T-8）は全項目確定。次フェーズはモノレポ雛形の実装。
+設計確定・**フェーズ2まで実装済み**（カレンダー・繰り返し予定・買い物リスト・担当・招待。
+`docs/design/09-implementation-order.md`）。残りはフェーズ3（Google同期）・フェーズ4（PWA/Push）。

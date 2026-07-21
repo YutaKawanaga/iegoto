@@ -1,0 +1,125 @@
+import { ListChecks } from 'lucide-react'
+import { Link } from 'react-router-dom'
+import { Spinner } from '@/components/ui/spinner'
+import type { FamilyInfo, MemberInfo } from '@/hooks/use-me'
+import type { Occurrence } from '@/lib/api-types'
+import { MEMBER_BG } from '@/lib/member-colors'
+import { cn } from '@/lib/utils'
+import { formatEventTimeLabel } from '@/utils/date-format'
+import { useToday } from './use-today'
+
+/** ホーム = 今日のまとめビュー (F-06) */
+export function TodayContainer({ family }: { family: FamilyInfo }) {
+  const t = useToday(family)
+
+  if (t.isLoading) {
+    return <Spinner />
+  }
+
+  return (
+    <div className="space-y-5">
+      <h1 className="text-xl font-bold">
+        {new Intl.DateTimeFormat('ja-JP', {
+          timeZone: 'Asia/Tokyo',
+          month: 'long',
+          day: 'numeric',
+          weekday: 'long',
+        }).format(new Date())}
+      </h1>
+
+      <Section title="今日の予定">
+        {t.todayEvents.length === 0 ? (
+          <Empty text="今日の予定はありません" />
+        ) : (
+          <EventList events={t.todayEvents} members={family.members} />
+        )}
+      </Section>
+
+      <Section title="自分の担当">
+        {t.myAssigned.length === 0 ? (
+          <Empty text="今日の担当はありません" />
+        ) : (
+          <EventList events={t.myAssigned} members={family.members} />
+        )}
+      </Section>
+
+      <Link
+        to="/shopping"
+        className="flex items-center justify-between rounded-xl border border-border bg-card p-4"
+      >
+        <span className="flex items-center gap-2 text-sm font-medium">
+          <ListChecks className="h-5 w-5 text-primary" />
+          買い物リスト
+        </span>
+        <span className="text-sm text-muted-foreground">
+          未購入 <span className="font-bold text-foreground">{t.uncheckedCount}</span> 件
+        </span>
+      </Link>
+
+      <Section title="明日の予定">
+        {t.tomorrowEvents.length === 0 ? (
+          <Empty text="明日の予定はありません" />
+        ) : (
+          <EventList events={t.tomorrowEvents} members={family.members} />
+        )}
+      </Section>
+    </div>
+  )
+}
+
+function Section({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <section>
+      <h2 className="mb-2 text-sm font-semibold text-muted-foreground">{title}</h2>
+      {children}
+    </section>
+  )
+}
+
+function Empty({ text }: { text: string }) {
+  return (
+    <p className="rounded-xl border border-dashed border-border p-4 text-sm text-muted-foreground">
+      {text}
+    </p>
+  )
+}
+
+function EventList({ events, members }: { events: Occurrence[]; members: MemberInfo[] }) {
+  const memberById = new Map(members.map((m) => [m.id, m]))
+  return (
+    <ul className="space-y-1.5">
+      {events.map((occ) => (
+        <li
+          key={`${occ.eventId}-${occ.originalStartAt.getTime()}`}
+          className="flex items-center gap-3 rounded-xl border border-border bg-card p-3"
+        >
+          <div className="flex -space-x-1">
+            {occ.targetMemberIds.slice(0, 3).map((id) => {
+              const m = memberById.get(id)
+              return m === undefined ? null : (
+                <span
+                  key={id}
+                  title={m.displayName}
+                  className={cn(
+                    'flex h-7 w-7 items-center justify-center rounded-full text-[10px] font-bold text-white ring-2 ring-card',
+                    MEMBER_BG[m.color],
+                  )}
+                >
+                  {m.displayName.slice(0, 1)}
+                </span>
+              )
+            })}
+          </div>
+          <div className="min-w-0 flex-1">
+            <p className="truncate text-sm font-medium">{occ.title}</p>
+            <p className="text-xs text-muted-foreground">
+              {formatEventTimeLabel(occ.time)}
+              {occ.assigneeMemberId !== null &&
+                ` ・ 担当: ${memberById.get(occ.assigneeMemberId)?.displayName ?? ''}`}
+            </p>
+          </div>
+        </li>
+      ))}
+    </ul>
+  )
+}

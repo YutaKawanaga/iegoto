@@ -1,0 +1,15 @@
+services:
+  db:
+    image: postgres:17-alpine
+    container_name: iegoto-postgres
+    environment:
+      POSTGRES_USER: iegoto
+      POSTGRES_PASSWORD: iegoto
+      POSTGRES_DB: iegoto
+    ports:
+      - '5432:5432'
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+volumes:
+  pgdata:

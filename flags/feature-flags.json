@@ -1,0 +1,11 @@
+{
+  "version": "1.0.0",
+  "flags": [
+    {
+      "name": "enable-feature-flag-system",
+      "description": "フィーチャーフラグシステム自体の有効化フラグ (killswitch。恒久運用)",
+      "defaultValue": true,
+      "cleanupBy": "2099-12-31"
+    }
+  ]
+}
