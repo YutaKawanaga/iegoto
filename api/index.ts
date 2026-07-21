@@ -1,5 +1,5 @@
+import { app } from '@iegoto/api'
 import { handle } from 'hono/vercel'
-import { app } from '../apps/api/src/app.js'
 
 /**
  * Vercel Functions エントリ (10-vercel-hosting.md)。
