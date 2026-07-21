@@ -1,8 +1,8 @@
 # iegoto ドメインモデル・データモデル設計書
 
-作成日: 2026-07-17
-ステータス: ドラフト（DDDレイヤ構成の詳細はR-2完了後に具体化）
-関連: `docs/design/01-spec-decisions.md` / `docs/design/02-tech-selection.md`
+作成日: 2026-07-17（同日更新: R-2完了により§5の未決事項を解消）
+ステータス: 決定案
+関連: `docs/design/01-spec-decisions.md` / `docs/design/02-tech-selection.md` / `docs/design/07-backend-design.md`
 
 ---
 
@@ -87,6 +87,7 @@ erDiagram
 | recurrence_end_at | timestamptz NULL | RRULEのUNTIL/COUNTから事前計算した実終端（期間クエリ最適化用。無期限はNULL） |
 | assignee_member_id | uuid FK NULL | 担当者。NULL=担当者未定（F-04） |
 | reminder_minutes_before | int NULL | NULL=リマインダーなし（S-6） |
+| next_reminder_at | timestamptz NULL | 次回リマインダー発火時刻の事前計算値。INDEX。書き込み時と発火後に再計算（繰り返しはRRULEから次回を導出）。NULL=なし/消化済み |
 | created_by_member_id | uuid FK | |
 | deleted_at | timestamptz NULL | |
 
@@ -148,10 +149,17 @@ erDiagram
 予定系: `createEvent` / `updateEvent`（3択の編集スコープ引数） / `deleteEvent`（同） / `listEventsInRange`（展開・マージ） / `listMyAssignedEvents` / `listUnassignedEvents` / `suggestPastEvents`（S-5）
 買い物系: `createShoppingList` / `addItem` / `checkItem` / `uncheckItem` / `deleteItem`
 連携系: `linkGoogleCalendar` / `unlinkGoogleCalendar`（revoke含む） / `syncGoogleCalendar`（Scheduler起点）
-通知系: `subscribePush` / `updateNotificationSetting` / `dispatchEventChangeNotifications`（変更系ユースケースから発火） / `dispatchReminders`（分単位Scheduler起点: `開始時刻 - reminder_minutes_before` が現在分に一致する展開済み予定を抽出して送信）
+通知系: `subscribePush` / `updateNotificationSetting` / `dispatchEventChangeNotifications`（変更系ユースケースから発火） / `dispatchReminders`（分単位Scheduler起点: `next_reminder_at <= now()` の予定をINDEX一発で抽出して送信し、送信後に次回発火時刻を再計算してUPDATE。毎分全予定をRRULE展開して照合する方式は採らない — 展開はイベントの書き込み時と発火後のみに限定し、展開バグの影響面と毎分の計算量を抑える）
 
-## 5. 未決事項（R-2完了後に確定）
+## 5. レイヤ構成（R-2完了により確定 → 詳細は `07-backend-design.md`）
 
-- レイヤ間の依存ルール・ディレクトリ命名（plainer-backendのDDD構成に合わせる）
-- リポジトリインターフェースの置き場所（domain層 or application層）
-- ユースケースの実装単位（1クラス1メソッド vs サービスクラス）
+R-2の抽出結果（`05-plainer-extraction-report.md`）を反映して以下のとおり確定した:
+
+- **レイヤ間の依存ルール・ディレクトリ命名**: plainerの独自マッピング（`route/`にUseCase同居）は
+  持ち込まず、DDD標準の層名に正規化（presentation=`modules/*/router.ts` / application=`modules/*/usecases/` /
+  domain=`packages/domain` / infrastructure=`packages/db`）。依存方向はパッケージ境界で物理強制
+- **リポジトリインターフェース**: plainerに合わせ**interface分離なし・具象クラスのみ**（`packages/db`）。
+  ただしメソッドの引数・戻り値はdomainエンティティに限定しPrisma型を漏らさない。
+  全メソッドの第一引数を`familyId`必須にして§1のテナント境界を型で強制
+- **ユースケースの実装単位**: **1ユースケース = 1ファイル = 1 exported関数**（plainerの
+  「1 UseCase 1クラス・public `process()`のみ」のTS翻訳）。§4の一覧と1:1対応。トランザクション境界はUseCase

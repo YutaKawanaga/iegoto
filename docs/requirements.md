@@ -177,10 +177,11 @@ TimeTreeのような汎用グループカレンダーではなく、家族（夫
 
 ## 10. 残論点（Claude Codeで詰める事項）
 
-> **2026-07-17更新**: 本節の各論点は `docs/design/` 配下の設計文書で検討・決定した。
+> **2026-07-17更新**: 本節の各論点はすべて `docs/design/` 配下の設計文書で検討・決定した。
 > 各論点の決定内容は以下を参照:
-> - §10.1 R-1〜R-4 → 未着手（plainerリポジトリへのセッションアクセスが必要。`docs/design/02-tech-selection.md` §0 参照）
-> - §10.2 T-1〜T-8 → `docs/design/02-tech-selection.md`
+> - §10.1 R-1〜R-4 → **完了**。`docs/design/05-plainer-extraction-report.md`（抽出結果）、
+>   適用先は `06-frontend-design.md` / `07-backend-design.md` / `08-feature-flag.md` / `04-operations.md` O-1
+> - §10.2 T-1〜T-8 → `docs/design/02-tech-selection.md`（**全項目確定**）
 > - §10.3 S-1〜S-7 → `docs/design/01-spec-decisions.md`
 > - §10.4 O-1〜O-5 → `docs/design/04-operations.md`
 
