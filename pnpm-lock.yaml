@@ -7,6 +7,13 @@ settings:
 importers:
 
   .:
+    dependencies:
+      '@iegoto/api':
+        specifier: workspace:*
+        version: link:apps/api
+      hono:
+        specifier: ^4.9.0
+        version: 4.12.31
     devDependencies:
       '@biomejs/biome':
         specifier: ^2.0.0
