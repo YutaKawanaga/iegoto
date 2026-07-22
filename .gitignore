@@ -12,3 +12,7 @@ packages/db/src/generated/
 api/_bundle.cjs
 api/_bundle.cjs.map
 api/*.node
+
+# e2e
+e2e/test-results/
+e2e/playwright-report/

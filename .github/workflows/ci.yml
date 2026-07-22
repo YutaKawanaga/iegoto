@@ -45,3 +45,46 @@ jobs:
         run: pnpm test
       - name: Build
         run: pnpm build
+
+  e2e:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: iegoto
+          POSTGRES_PASSWORD: iegoto
+          POSTGRES_DB: iegoto_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U iegoto"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      DATABASE_URL: postgresql://iegoto:iegoto@localhost:5432/iegoto_test
+      DIRECT_URL: postgresql://iegoto:iegoto@localhost:5432/iegoto_test
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Migrate test DB
+        run: pnpm --filter @iegoto/db run migrate:deploy
+      - name: Generate Prisma client
+        run: pnpm --filter @iegoto/db run generate
+      - name: Install Playwright browser
+        run: pnpm --filter @iegoto/e2e exec playwright install --with-deps chromium
+      - name: Run E2E tests
+        run: pnpm --filter @iegoto/e2e run test
+      - name: Upload report on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: e2e/test-results/
+          retention-days: 7
