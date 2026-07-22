@@ -108,6 +108,21 @@ export class ShoppingRepository {
     })
   }
 
+  /**
+   * 家族がこれまでに追加したアイテム名を頻度順で返す (F-05 クイック追加)。
+   * 購入済み・削除済みも含めた全履歴を集計する
+   */
+  async frequentItemNames(familyId: FamilyId, limit: number): Promise<string[]> {
+    const rows = await this.tx.shoppingItem.groupBy({
+      by: ['name'],
+      where: { list: { familyId } },
+      _count: { name: true },
+      orderBy: { _count: { name: 'desc' } },
+      take: limit,
+    })
+    return rows.map((row) => row.name)
+  }
+
   async softDeleteItem(familyId: FamilyId, itemId: ShoppingItemId): Promise<void> {
     await this.tx.shoppingItem.updateMany({
       where: { id: itemId, list: { familyId } },

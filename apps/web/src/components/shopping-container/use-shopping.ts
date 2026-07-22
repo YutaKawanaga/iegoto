@@ -5,6 +5,28 @@ import { usePersistentState } from '@/hooks/use-persistent-state'
 import { useRealtime } from '@/hooks/use-realtime'
 import { useTRPC } from '@/lib/trpc'
 
+/** 履歴が少ないうちのクイック追加候補: 一般的な定番アイテム */
+const PRESET_ITEMS = [
+  '牛乳',
+  '卵',
+  'パン',
+  '米',
+  '納豆',
+  '豆腐',
+  'ヨーグルト',
+  'バナナ',
+  '鶏肉',
+  '豚肉',
+  '玉ねぎ',
+  'にんじん',
+  'じゃがいも',
+  'トイレットペーパー',
+  'ティッシュ',
+  '洗剤',
+] as const
+
+const MAX_SUGGESTIONS = 12
+
 /** 買い物リスト (F-05)。チェック操作のみ楽観更新 (06 §4) */
 export function useShopping() {
   const trpc = useTRPC()
@@ -24,6 +46,18 @@ export function useShopping() {
 
   const lists = listsQuery.data ?? []
   const activeList = lists.find((l) => l.id === activeListId) ?? lists[0] ?? null
+
+  // クイック追加候補: 家族の履歴 (頻度順) を優先し、定番で補完。未購入で入っている物は除く
+  const frequentQuery = useQuery(trpc.shopping.frequentItems.queryOptions())
+  const unchecked = new Set(
+    (activeList?.items ?? []).filter((i) => i.checkedAt === null).map((i) => i.name),
+  )
+  const suggestions =
+    activeList === null
+      ? []
+      : [...new Set([...(frequentQuery.data ?? []), ...PRESET_ITEMS])]
+          .filter((name) => !unchecked.has(name))
+          .slice(0, MAX_SUGGESTIONS)
 
   const invalidate = () => queryClient.invalidateQueries(trpc.shopping.pathFilter())
 
@@ -111,6 +145,12 @@ export function useShopping() {
       }
     },
     isAddingItem: addItem.isPending,
+    suggestions,
+    quickAddItem: (name: string) => {
+      if (activeList !== null && !addItem.isPending) {
+        addItem.mutate({ listId: activeList.id, name })
+      }
+    },
     toggleItem: (itemId: string, checked: boolean) => setChecked.mutate({ itemId, checked }),
     removeItem: (itemId: string) => deleteItem.mutate({ itemId }),
     isAddingList,

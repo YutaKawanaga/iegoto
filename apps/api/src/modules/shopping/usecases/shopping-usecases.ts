@@ -87,3 +87,8 @@ export async function deleteItem(ctx: FamilyContext, input: { itemId: string }) 
 export async function countUnchecked(ctx: FamilyContext) {
   return { count: await new ShoppingRepository(ctx.db).countUncheckedItems(ctx.familyId) }
 }
+
+/** クイック追加候補: 家族が過去に追加したアイテム名 (頻度順) */
+export async function frequentItemNames(ctx: FamilyContext) {
+  return new ShoppingRepository(ctx.db).frequentItemNames(ctx.familyId, 30)
+}
