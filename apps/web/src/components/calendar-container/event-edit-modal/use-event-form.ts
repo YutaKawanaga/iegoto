@@ -77,9 +77,6 @@ export function useEventForm(target: EditTarget, family: FamilyInfo, onClose: ()
     const defaults = target.mode === 'create' ? (target.defaultMemberIds ?? []) : []
     return defaults.filter((id) => activeIds.has(id))
   })
-  const [assigneeMemberId, setAssigneeMemberId] = useState<string | null>(
-    editing?.assigneeMemberId ?? null,
-  )
   const [reminderMinutes, setReminderMinutes] = useState<number | null>(
     editing?.reminderMinutesBefore ?? null,
   )
@@ -107,7 +104,6 @@ export function useEventForm(target: EditTarget, family: FamilyInfo, onClose: ()
     setLocation(s.location ?? '')
     setIsAllDay(s.isAllDay)
     setTargetMemberIds(s.targetMemberIds)
-    setAssigneeMemberId(s.assigneeMemberId)
     if (!s.isAllDay && s.startTimeLocal !== null && s.durationMinutes !== null) {
       setStartTime(s.startTimeLocal)
       const start = jstToUtc(dateKey, s.startTimeLocal)
@@ -173,7 +169,6 @@ export function useEventForm(target: EditTarget, family: FamilyInfo, onClose: ()
       time: buildTime(),
       rrule,
       targetMemberIds,
-      assigneeMemberId,
       reminderMinutesBefore: reminderMinutes,
     })
   }
@@ -191,7 +186,6 @@ export function useEventForm(target: EditTarget, family: FamilyInfo, onClose: ()
         location: location.trim() === '' ? null : location,
         time: buildTime(),
         targetMemberIds,
-        assigneeMemberId,
         reminderMinutesBefore: reminderMinutes,
         // 'this' はマスタの繰り返しを触らない。'all'/'following' も明示変更時のみ
         ...(scope !== 'this' && recurrence !== null
@@ -254,8 +248,6 @@ export function useEventForm(target: EditTarget, family: FamilyInfo, onClose: ()
     setEndTime,
     targetMemberIds,
     setTargetMemberIds,
-    assigneeMemberId,
-    setAssigneeMemberId,
     reminderMinutes,
     setReminderMinutes,
     recurrence,

@@ -1,6 +1,5 @@
-import { createBrowserRouter } from 'react-router-dom'
+import { createBrowserRouter, Navigate } from 'react-router-dom'
 import { RootLayout } from '@/components/layout/root-layout'
-import { AssignmentsPage } from '@/pages/assignments/assignments-page'
 import { CalendarPage } from '@/pages/calendar/calendar-page'
 import { InviteJoinPage } from '@/pages/invite/invite-join-page'
 import { LoginPage } from '@/pages/login/login-page'
@@ -23,9 +22,10 @@ export const router = createBrowserRouter([
         children: [
           { path: '/', element: <TodayPage /> },
           { path: '/calendar', element: <CalendarPage /> },
-          { path: '/assignments', element: <AssignmentsPage /> },
           { path: '/shopping', element: <ShoppingPage /> },
           { path: '/settings', element: <SettingsPage /> },
+          // 廃止したパス (旧 /assignments 等) や不明なパスはホームへ
+          { path: '*', element: <Navigate to="/" replace /> },
         ],
       },
     ],

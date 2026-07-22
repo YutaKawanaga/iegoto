@@ -76,11 +76,7 @@ export function useCalendar() {
     if (filterMemberIds.length === 0) {
       return all
     }
-    return all.filter(
-      (o) =>
-        o.targetMemberIds.some((id) => filterMemberIds.includes(id)) ||
-        (o.assigneeMemberId !== null && filterMemberIds.includes(o.assigneeMemberId)),
-    )
+    return all.filter((o) => o.targetMemberIds.some((id) => filterMemberIds.includes(id)))
   }, [eventsQuery.data, filterMemberIds])
 
   /** 日付キー → その日の occurrence 一覧 (開始時刻順 = 重複の並列表示) */

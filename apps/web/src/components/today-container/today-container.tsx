@@ -10,7 +10,7 @@ import { useToday } from './use-today'
 
 /** ホーム = 今日のまとめビュー (F-06) */
 export function TodayContainer({ family }: { family: FamilyInfo }) {
-  const t = useToday(family)
+  const t = useToday()
 
   if (t.isLoading) {
     return <Spinner />
@@ -28,9 +28,7 @@ export function TodayContainer({ family }: { family: FamilyInfo }) {
             weekday: 'long',
           }).format(new Date())}
         </h1>
-        <p className="mt-1 text-xs text-muted-foreground">
-          今日の予定 {t.todayEvents.length}件 ・ 自分の担当 {t.myAssigned.length}件
-        </p>
+        <p className="mt-1 text-xs text-muted-foreground">今日の予定 {t.todayEvents.length}件</p>
       </div>
 
       <Section title="今日の予定">
@@ -38,14 +36,6 @@ export function TodayContainer({ family }: { family: FamilyInfo }) {
           <Empty text="今日の予定はありません" />
         ) : (
           <EventList events={t.todayEvents} members={family.members} />
-        )}
-      </Section>
-
-      <Section title="自分の担当">
-        {t.myAssigned.length === 0 ? (
-          <Empty text="今日の担当はありません" />
-        ) : (
-          <EventList events={t.myAssigned} members={family.members} />
         )}
       </Section>
 
@@ -118,11 +108,7 @@ function EventList({ events, members }: { events: Occurrence[]; members: MemberI
           </div>
           <div className="min-w-0 flex-1">
             <p className="truncate text-sm font-medium">{occ.title}</p>
-            <p className="text-xs text-muted-foreground">
-              {formatEventTimeLabel(occ.time)}
-              {occ.assigneeMemberId !== null &&
-                ` ・ 担当: ${memberById.get(occ.assigneeMemberId)?.displayName ?? ''}`}
-            </p>
+            <p className="text-xs text-muted-foreground">{formatEventTimeLabel(occ.time)}</p>
           </div>
         </li>
       ))}
