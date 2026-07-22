@@ -1,4 +1,4 @@
-import { Plus, Trash2 } from 'lucide-react'
+import { Plus, ShoppingBasket, Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Input } from '@/components/ui/input'
@@ -19,6 +19,7 @@ export function ShoppingContainer({ family }: { family: FamilyInfo }) {
 
   return (
     <div className="space-y-3">
+      <h1 className="text-xl font-bold">買い物リスト</h1>
       <div className="flex flex-wrap items-center gap-1.5">
         {s.lists.map((list) => (
           <button
@@ -36,37 +37,68 @@ export function ShoppingContainer({ family }: { family: FamilyInfo }) {
             </span>
           </button>
         ))}
-        {s.isAddingList ? (
+        {s.lists.length > 0 &&
+          (s.isAddingList ? (
+            <form
+              className="flex items-center gap-1"
+              onSubmit={(e) => {
+                e.preventDefault()
+                s.submitNewList()
+              }}
+            >
+              <Input
+                className="h-8 w-36"
+                placeholder="リスト名"
+                value={s.newListName}
+                onChange={(e) => s.setNewListName(e.target.value)}
+                maxLength={50}
+                autoFocus
+              />
+              <Button type="submit" size="sm">
+                作成
+              </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => s.setIsAddingList(false)}
+              >
+                取消
+              </Button>
+            </form>
+          ) : (
+            <Button variant="outline" size="sm" onClick={() => s.setIsAddingList(true)}>
+              <Plus className="h-4 w-4" />
+              リストを追加
+            </Button>
+          ))}
+      </div>
+
+      {s.activeList === null ? (
+        <div className="rounded-2xl border border-dashed border-border bg-card/50 px-6 py-12 text-center">
+          <ShoppingBasket className="mx-auto mb-3 h-10 w-10 text-primary/60" />
+          <p className="mb-1 text-sm font-medium">最初の買い物リストを作りましょう</p>
+          <p className="mb-4 text-xs text-muted-foreground">
+            食料品・日用品など、用途ごとに複数のリストを作れます
+          </p>
           <form
-            className="flex items-center gap-1"
+            className="mx-auto flex max-w-xs items-center gap-2"
             onSubmit={(e) => {
               e.preventDefault()
               s.submitNewList()
             }}
           >
             <Input
-              className="h-8 w-36"
-              placeholder="リスト名"
+              placeholder="例: 食料品"
               value={s.newListName}
               onChange={(e) => s.setNewListName(e.target.value)}
               maxLength={50}
             />
-            <Button type="submit" size="sm">
-              追加
+            <Button type="submit" disabled={s.newListName.trim().length === 0}>
+              作成
             </Button>
           </form>
-        ) : (
-          <Button variant="ghost" size="sm" onClick={() => s.setIsAddingList(true)}>
-            <Plus className="h-4 w-4" />
-            リスト
-          </Button>
-        )}
-      </div>
-
-      {s.activeList === null ? (
-        <p className="py-12 text-center text-sm text-muted-foreground">
-          「+ リスト」から最初の買い物リストを作りましょう (例: 食料品)
-        </p>
+        </div>
       ) : (
         <div className="rounded-xl border border-border bg-card">
           <form

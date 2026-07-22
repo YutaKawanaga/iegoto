@@ -97,10 +97,13 @@ type ViewProps = { c: ReturnType<typeof useCalendar>; family: FamilyInfo }
 
 function MonthView({ c, family }: ViewProps) {
   return (
-    <div className="overflow-hidden rounded-xl border border-border bg-card">
-      <div className="grid grid-cols-7 border-b border-border bg-muted/50 text-center text-xs text-muted-foreground">
-        {WEEKDAY_LABELS.map((w) => (
-          <div key={w} className="py-1.5">
+    <div className="overflow-hidden rounded-xl border border-border bg-card shadow-sm">
+      <div className="grid grid-cols-7 border-b border-border bg-muted/50 text-center text-xs font-medium text-muted-foreground">
+        {WEEKDAY_LABELS.map((w, i) => (
+          <div
+            key={w}
+            className={cn('py-1.5', i === 0 && 'text-red-500', i === 6 && 'text-blue-500')}
+          >
             {w}
           </div>
         ))}
@@ -114,13 +117,15 @@ function MonthView({ c, family }: ViewProps) {
               type="button"
               onClick={() => c.openCreate(day.dateKey)}
               className={cn(
-                'min-h-20 border-b border-r border-border p-1 text-left align-top last:border-r-0 md:min-h-24',
+                'min-h-20 min-w-0 border-b border-r border-border p-1 text-left align-top transition-colors last:border-r-0 hover:bg-muted/40 md:min-h-28',
                 !day.inMonth && 'bg-muted/30 text-muted-foreground',
               )}
             >
               <span
                 className={cn(
                   'mb-0.5 inline-flex h-5 w-5 items-center justify-center rounded-full text-xs',
+                  day.weekday === 0 && day.inMonth && 'text-red-500',
+                  day.weekday === 6 && day.inMonth && 'text-blue-500',
                   day.dateKey === c.todayKey && 'bg-primary font-bold text-primary-foreground',
                 )}
               >
