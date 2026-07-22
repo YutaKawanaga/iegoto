@@ -1,11 +1,72 @@
-import { Copy, LogOut, Trash2, UserPlus } from 'lucide-react'
+import { Bell, Copy, LogOut, Trash2, UserPlus } from 'lucide-react'
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
+import { Checkbox } from '@/components/ui/checkbox'
 import { Input } from '@/components/ui/input'
 import type { FamilyInfo } from '@/hooks/use-me'
+import { usePushNotifications } from '@/hooks/use-push-notifications'
 import { MEMBER_BG } from '@/lib/member-colors'
 import { cn } from '@/lib/utils'
 import { useSettings } from './use-settings'
+
+const NOTIFICATION_KINDS = [
+  { key: 'eventCreated', label: '予定が追加されたとき' },
+  { key: 'eventChanged', label: '予定が変更・削除されたとき' },
+  { key: 'reminder', label: 'リマインダー (予定の前の通知)' },
+] as const
+
+/** 通知セクション (F-08): この端末での購読 + 種類別ON/OFF */
+function NotificationSection() {
+  const p = usePushNotifications()
+  if (p.isLoading || !p.configured) {
+    return null
+  }
+  return (
+    <section>
+      <h2 className="mb-2 text-sm font-semibold text-muted-foreground">通知</h2>
+      <div className="space-y-3 rounded-xl border border-border bg-card p-4">
+        <div className="flex items-center justify-between gap-3">
+          <div>
+            <p className="text-sm font-medium">この端末で通知を受け取る</p>
+            <p className="text-[11px] text-muted-foreground">
+              {p.subscriptionCount > 0
+                ? `${p.subscriptionCount}台の端末で受信中`
+                : 'iPhoneは「ホーム画面に追加」したiegotoから有効にしてください'}
+            </p>
+          </div>
+          <Button size="sm" onClick={p.enableOnThisDevice} disabled={p.isSubscribing}>
+            <Bell className="h-4 w-4" />
+            有効にする
+          </Button>
+        </div>
+        <div className="space-y-2 border-t border-border pt-3">
+          {NOTIFICATION_KINDS.map(({ key, label }) => (
+            <label key={key} className="flex items-center gap-2 text-sm">
+              <Checkbox
+                checked={p.setting[key]}
+                onCheckedChange={(v) => p.updateSetting({ ...p.setting, [key]: v === true })}
+              />
+              {label}
+            </label>
+          ))}
+          <p className="text-[11px] text-muted-foreground">
+            自分が行った操作の通知は自分には届きません
+          </p>
+        </div>
+        {p.subscriptionCount > 0 && (
+          <Button
+            variant="ghost"
+            size="sm"
+            className="text-muted-foreground"
+            onClick={p.disableOnThisDevice}
+          >
+            この端末の通知を解除する
+          </Button>
+        )}
+      </div>
+    </section>
+  )
+}
 
 /** 設定画面 (F-01): 家族・メンバー・招待の管理 */
 export function SettingsContainer({ family }: { family: FamilyInfo }) {
@@ -143,6 +204,8 @@ export function SettingsContainer({ family }: { family: FamilyInfo }) {
           )}
         </div>
       </section>
+
+      <NotificationSection />
 
       <section className="space-y-2">
         <Button variant="outline" className="w-full" onClick={s.logout}>

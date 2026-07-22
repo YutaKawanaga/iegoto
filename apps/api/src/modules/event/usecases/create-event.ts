@@ -7,6 +7,7 @@ import {
 } from '@iegoto/domain'
 import { TRPCError } from '@trpc/server'
 import type { FamilyContext } from '../../../trpc.js'
+import { notifyFamily } from '../../push/push-service.js'
 
 export type CreateEventInput = {
   title: string
@@ -43,6 +44,12 @@ export async function createEvent(
   const reminder = nextReminderAt(event, [], new Date())
   await ctx.db.$transaction(async (tx) => {
     await new EventRepository(tx).save(ctx.familyId, event, reminder)
+  })
+  const actor = await new MemberRepository(ctx.db).find(ctx.familyId, ctx.memberId)
+  await notifyFamily(ctx.db, ctx.familyId, ctx.memberId, 'eventCreated', {
+    title: '予定が追加されました',
+    body: `${actor?.displayName ?? '家族'}が「${event.title}」を追加しました`,
+    url: '/calendar',
   })
   return { eventId: event.id }
 }

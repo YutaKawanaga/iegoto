@@ -40,10 +40,41 @@ model UserAccount {
   avatarUrl   String?  @map("avatar_url")
   createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz()
 
-  members  Member[]
-  sessions Session[]
+  members           Member[]
+  sessions          Session[]
+  pushSubscriptions PushSubscription[]
 
   @@map("user_account")
+}
+
+/// Web Push の購読 (F-08)。1行 = 1ブラウザ/1端末。アカウント単位で持つ
+model PushSubscription {
+  id            String   @id @db.Uuid
+  userAccountId String   @map("user_account_id") @db.Uuid
+  /// Push サービスのエンドポイントURL。端末を一意に識別する
+  endpoint      String   @unique
+  p256dh        String
+  auth          String
+  createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz()
+
+  userAccount UserAccount @relation(fields: [userAccountId], references: [id], onDelete: Cascade)
+
+  @@index([userAccountId])
+  @@map("push_subscription")
+}
+
+/// 通知の種類別 ON/OFF (F-08)。行がない = 全種別ON (デフォルト)
+model NotificationSetting {
+  userAccountId String   @id @map("user_account_id") @db.Uuid
+  /// 家族の誰かが予定を追加したとき
+  eventCreated  Boolean  @default(true) @map("event_created")
+  /// 家族の誰かが予定を変更・削除したとき
+  eventChanged  Boolean  @default(true) @map("event_changed")
+  /// 予定のリマインダー (○分前通知)
+  reminder      Boolean  @default(true)
+  updatedAt     DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz()
+
+  @@map("notification_setting")
 }
 
 /// 家族内プロフィール。user_account_id NULL = ログイン不可 (子ども等)

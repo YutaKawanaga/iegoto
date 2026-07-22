@@ -15,6 +15,8 @@ import { addMember } from './member/usecases/add-member.js'
 import { leaveFamily } from './member/usecases/leave-family.js'
 import { softDeleteMember } from './member/usecases/soft-delete-member.js'
 import { updateMember } from './member/usecases/update-member.js'
+import { withEventChangeNotification } from './push/notify-event-change.js'
+import * as push from './push/usecases/push-usecases.js'
 import {
   editScopeSchema,
   eventChangesSchema,
@@ -121,7 +123,9 @@ export const appRouter = router({
           changes: eventChangesSchema,
         }),
       )
-      .mutation(({ ctx, input }) => updateEvent(ctx, input)),
+      .mutation(({ ctx, input }) =>
+        withEventChangeNotification(ctx, input.eventId, '変更', () => updateEvent(ctx, input)),
+      ),
     delete: familyProcedure
       .input(
         z.object({
@@ -130,12 +134,39 @@ export const appRouter = router({
           originalStartAt: z.date().optional(),
         }),
       )
-      .mutation(({ ctx, input }) => deleteEvent(ctx, input)),
+      .mutation(({ ctx, input }) =>
+        withEventChangeNotification(ctx, input.eventId, '削除', () => deleteEvent(ctx, input)),
+      ),
     suggest: familyProcedure
       .input(z.object({ query: z.string().max(200) }))
       .query(({ ctx, input }) => suggestPastEvents(ctx, input)),
     myAssigned: familyProcedure.query(({ ctx }) => listMyAssignedEvents(ctx)),
     unassigned: familyProcedure.query(({ ctx }) => listUnassignedEvents(ctx)),
+  }),
+
+  push: router({
+    status: familyProcedure.query(({ ctx }) => push.getPushStatus(ctx)),
+    subscribe: familyProcedure
+      .input(
+        z.object({
+          endpoint: z.string().url().max(2000),
+          p256dh: z.string().min(1).max(500),
+          auth: z.string().min(1).max(500),
+        }),
+      )
+      .mutation(({ ctx, input }) => push.subscribePush(ctx, input)),
+    unsubscribe: familyProcedure
+      .input(z.object({ endpoint: z.string().url().max(2000) }))
+      .mutation(({ ctx, input }) => push.unsubscribePush(ctx, input)),
+    updateSetting: familyProcedure
+      .input(
+        z.object({
+          eventCreated: z.boolean(),
+          eventChanged: z.boolean(),
+          reminder: z.boolean(),
+        }),
+      )
+      .mutation(({ ctx, input }) => push.updateNotificationSetting(ctx, input)),
   }),
 
   shopping: router({
