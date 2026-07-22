@@ -90,21 +90,26 @@ export function useSettings(family: FamilyInfo) {
     newMemberName,
     setNewMemberName,
     submitNewMember: () => {
-      if (newMemberName.trim().length > 0) {
+      // isPending ガード: 連打による二重登録防止 (ボタン disable と二段構え)
+      if (newMemberName.trim().length > 0 && !addMember.isPending) {
         addMember.mutate({ displayName: newMemberName })
       }
     },
+    isAddingMember: addMember.isPending,
     renameMember: (memberId: string, displayName: string) =>
       updateMember.mutate({ memberId, displayName }),
     removeMember: (memberId: string) => deleteMember.mutate({ memberId }),
+    isRemovingMember: deleteMember.isPending,
     hasActiveInvitation: activeInvitation.data != null,
     invitationExpiresAt: activeInvitation.data?.expiresAt ?? null,
     inviteUrl,
     issueInvitation: () => issueInvitation.mutate(),
     isIssuing: issueInvitation.isPending,
     revokeInvitation: () => revokeInvitation.mutate(),
+    isRevoking: revokeInvitation.isPending,
     copyInviteUrl,
     leaveFamily: () => leave.mutate(),
+    isLeaving: leave.isPending,
     logout,
   }
 }

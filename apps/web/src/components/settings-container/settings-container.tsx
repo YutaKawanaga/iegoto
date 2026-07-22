@@ -57,6 +57,7 @@ export function SettingsContainer({ family }: { family: FamilyInfo }) {
                     size="icon"
                     className="h-8 w-8 text-muted-foreground"
                     aria-label={`${m.displayName}を削除`}
+                    disabled={s.isRemovingMember}
                     onClick={() => {
                       if (window.confirm(`${m.displayName} を削除しますか？過去の予定は残ります`)) {
                         s.removeMember(m.id)
@@ -82,7 +83,7 @@ export function SettingsContainer({ family }: { family: FamilyInfo }) {
             onChange={(e) => s.setNewMemberName(e.target.value)}
             maxLength={30}
           />
-          <Button type="submit" disabled={s.newMemberName.trim().length === 0}>
+          <Button type="submit" disabled={s.newMemberName.trim().length === 0 || s.isAddingMember}>
             <UserPlus className="h-4 w-4" />
             追加
           </Button>
@@ -103,7 +104,12 @@ export function SettingsContainer({ family }: { family: FamilyInfo }) {
                   <Copy className="h-4 w-4" />
                   コピー
                 </Button>
-                <Button size="sm" variant="outline" onClick={s.revokeInvitation}>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  disabled={s.isRevoking}
+                  onClick={s.revokeInvitation}
+                >
                   無効にする
                 </Button>
               </div>
@@ -123,7 +129,13 @@ export function SettingsContainer({ family }: { family: FamilyInfo }) {
                 招待リンクを発行
               </Button>
               {s.hasActiveInvitation && (
-                <Button size="sm" variant="outline" className="ml-2" onClick={s.revokeInvitation}>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="ml-2"
+                  disabled={s.isRevoking}
+                  onClick={s.revokeInvitation}
+                >
                   今のリンクを無効にする
                 </Button>
               )}
@@ -143,7 +155,12 @@ export function SettingsContainer({ family }: { family: FamilyInfo }) {
               家族から退出しますか？プロフィールと予定は残り、ログインだけできなくなります
             </p>
             <div className="flex gap-2">
-              <Button size="sm" variant="destructive" onClick={s.leaveFamily}>
+              <Button
+                size="sm"
+                variant="destructive"
+                disabled={s.isLeaving}
+                onClick={s.leaveFamily}
+              >
                 退出する
               </Button>
               <Button size="sm" variant="ghost" onClick={() => setConfirmingLeave(false)}>
