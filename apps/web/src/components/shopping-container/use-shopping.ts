@@ -5,27 +5,7 @@ import { usePersistentState } from '@/hooks/use-persistent-state'
 import { useRealtime } from '@/hooks/use-realtime'
 import { useTRPC } from '@/lib/trpc'
 
-/** 履歴が少ないうちのクイック追加候補: 一般的な定番アイテム */
-const PRESET_ITEMS = [
-  '牛乳',
-  '卵',
-  'パン',
-  '米',
-  '納豆',
-  '豆腐',
-  'ヨーグルト',
-  'バナナ',
-  '鶏肉',
-  '豚肉',
-  '玉ねぎ',
-  'にんじん',
-  'じゃがいも',
-  'トイレットペーパー',
-  'ティッシュ',
-  '洗剤',
-] as const
-
-const MAX_SUGGESTIONS = 12
+const MAX_SUGGESTIONS = 6
 
 /** 買い物リスト (F-05)。チェック操作のみ楽観更新 (06 §4) */
 export function useShopping() {
@@ -40,23 +20,26 @@ export function useShopping() {
     'iegoto.shopping.activeListId',
     null,
   )
-  const [newItemName, setNewItemName] = useState('')
   const [newListName, setNewListName] = useState('')
   const [isAddingList, setIsAddingList] = useState(false)
 
   const lists = listsQuery.data ?? []
   const activeList = lists.find((l) => l.id === activeListId) ?? lists[0] ?? null
 
-  // クイック追加候補: 家族の履歴 (頻度順) を優先し、定番で補完。未購入で入っている物は除く
+  // 入力オートコンプリート: 家族の追加履歴 (頻度順) から候補を出す。
+  // 未購入でリストに入っている物は除外し、入力中は部分一致で絞り込む
   const frequentQuery = useQuery(trpc.shopping.frequentItems.queryOptions())
   const unchecked = new Set(
     (activeList?.items ?? []).filter((i) => i.checkedAt === null).map((i) => i.name),
   )
-  const suggestions =
+  const [newItemName, setNewItemName] = useState('')
+  const itemQuery = newItemName.trim()
+  const itemSuggestions =
     activeList === null
       ? []
-      : [...new Set([...(frequentQuery.data ?? []), ...PRESET_ITEMS])]
+      : (frequentQuery.data ?? [])
           .filter((name) => !unchecked.has(name))
+          .filter((name) => itemQuery === '' || name.includes(itemQuery))
           .slice(0, MAX_SUGGESTIONS)
 
   const invalidate = () => queryClient.invalidateQueries(trpc.shopping.pathFilter())
@@ -145,7 +128,7 @@ export function useShopping() {
       }
     },
     isAddingItem: addItem.isPending,
-    suggestions,
+    itemSuggestions,
     quickAddItem: (name: string) => {
       if (activeList !== null && !addItem.isPending) {
         addItem.mutate({ listId: activeList.id, name })

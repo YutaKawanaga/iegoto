@@ -1,4 +1,5 @@
 import { Plus, ShoppingBasket, Trash2 } from 'lucide-react'
+import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Input } from '@/components/ui/input'
@@ -10,6 +11,7 @@ import { useShopping } from './use-shopping'
 /** 買い物リスト画面 (F-05): 複数リスト・誰が追加したか表示・リアルタイム反映 */
 export function ShoppingContainer({ family }: { family: FamilyInfo }) {
   const s = useShopping()
+  const [itemInputFocused, setItemInputFocused] = useState(false)
   const memberName = (id: string | null) =>
     id === null ? '' : (family.members.find((m) => m.id === id)?.displayName ?? '')
 
@@ -133,34 +135,43 @@ export function ShoppingContainer({ family }: { family: FamilyInfo }) {
               s.submitNewItem()
             }}
           >
-            <Input
-              placeholder="アイテムを追加 (例: 牛乳)"
-              value={s.newItemName}
-              onChange={(e) => s.setNewItemName(e.target.value)}
-              maxLength={100}
-            />
+            <div className="relative flex-1">
+              <Input
+                placeholder="アイテムを追加 (例: 牛乳)"
+                value={s.newItemName}
+                onChange={(e) => s.setNewItemName(e.target.value)}
+                onFocus={() => setItemInputFocused(true)}
+                onBlur={() => setItemInputFocused(false)}
+                maxLength={100}
+              />
+              {itemInputFocused && s.itemSuggestions.length > 0 && (
+                <div className="absolute inset-x-0 top-11 z-10 overflow-hidden rounded-lg border border-border bg-card shadow-lg">
+                  <p className="border-b border-border px-3 py-1.5 text-[11px] text-muted-foreground">
+                    {s.newItemName.trim() === '' ? 'よく買うもの' : '履歴から'}・タップで追加
+                  </p>
+                  {s.itemSuggestions.map((name) => (
+                    <button
+                      key={name}
+                      type="button"
+                      disabled={s.isAddingItem}
+                      className="flex w-full items-center gap-1.5 px-3 py-2 text-left text-sm hover:bg-muted disabled:opacity-50"
+                      onMouseDown={(e) => {
+                        // blur より先に発火させて追加する (blur でドロップダウンが閉じるため)
+                        e.preventDefault()
+                        s.quickAddItem(name)
+                      }}
+                    >
+                      <Plus className="h-3.5 w-3.5 text-primary" />
+                      {name}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
             <Button type="submit" disabled={s.newItemName.trim().length === 0 || s.isAddingItem}>
               追加
             </Button>
           </form>
-          {s.suggestions.length > 0 && (
-            <div className="border-b border-border px-3 py-2.5">
-              <p className="mb-1.5 text-[11px] text-muted-foreground">タップで追加</p>
-              <div className="flex flex-wrap gap-1.5">
-                {s.suggestions.map((name) => (
-                  <button
-                    key={name}
-                    type="button"
-                    disabled={s.isAddingItem}
-                    onClick={() => s.quickAddItem(name)}
-                    className="rounded-full border border-border bg-muted/40 px-2.5 py-1 text-xs transition-colors hover:bg-muted disabled:opacity-50"
-                  >
-                    ＋ {name}
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
           <ul>
             {s.activeList.items.map((item) => (
               <li
