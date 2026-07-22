@@ -80,7 +80,7 @@ jobs:
       - name: Install Playwright browser
         run: pnpm --filter @iegoto/e2e exec playwright install --with-deps chromium
       - name: Run E2E tests
-        run: pnpm --filter @iegoto/e2e run test
+        run: pnpm --filter @iegoto/e2e run e2e
       - name: Upload report on failure
         if: failure()
         uses: actions/upload-artifact@v4
