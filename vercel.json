@@ -1,6 +1,7 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": null,
+  "regions": ["sin1"],
   "installCommand": "pnpm install --frozen-lockfile",
   "buildCommand": "pnpm --filter @iegoto/db run generate && pnpm --filter @iegoto/db exec prisma migrate deploy && pnpm --filter @iegoto/web run build && node scripts/build-vercel-function.mjs",
   "outputDirectory": "apps/web/dist",
