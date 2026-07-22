@@ -1,5 +1,6 @@
-import { Calendar, CalendarHeart, Home, ListChecks, Settings, UserCheck } from 'lucide-react'
+import { Calendar, Home, ListChecks, Settings, UserCheck } from 'lucide-react'
 import { NavLink, Outlet } from 'react-router-dom'
+import { AppLogo } from '@/components/ui/app-logo'
 import { cn } from '@/lib/utils'
 
 const NAV_ITEMS = [
@@ -19,7 +20,7 @@ export function RootLayout() {
     <div className="min-h-dvh md:flex">
       <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-card pb-safe md:sticky md:top-0 md:h-dvh md:w-56 md:shrink-0 md:border-r md:border-t-0 md:bg-card md:px-3 md:pt-6">
         <p className="hidden items-center gap-2 px-3 pb-6 text-xl font-bold text-primary md:flex">
-          <CalendarHeart className="h-6 w-6" />
+          <AppLogo className="h-7 w-7" />
           iegoto
         </p>
         <div className="mx-auto flex max-w-md justify-around md:mx-0 md:max-w-none md:flex-col md:justify-start md:gap-1">

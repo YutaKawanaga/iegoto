@@ -1,5 +1,6 @@
-import { CalendarHeart, ListChecks, UserCheck, Users } from 'lucide-react'
+import { ListChecks, UserCheck, Users } from 'lucide-react'
 import { useSearchParams } from 'react-router-dom'
+import { AppLogo } from '@/components/ui/app-logo'
 import { Button } from '@/components/ui/button'
 import { useDocumentTitle } from '@/hooks/use-document-title'
 
@@ -18,9 +19,7 @@ export function LoginPage() {
     <div className="flex min-h-dvh flex-col items-center justify-center bg-gradient-to-b from-primary/10 via-background to-background px-6">
       <div className="w-full max-w-sm rounded-2xl border border-border bg-card p-8 shadow-lg">
         <div className="mb-6 text-center">
-          <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10">
-            <CalendarHeart className="h-8 w-8 text-primary" />
-          </div>
+          <AppLogo className="mx-auto mb-3 h-20 w-20" />
           <h1 className="text-3xl font-bold tracking-tight text-primary">iegoto</h1>
           <p className="mt-2 text-sm text-muted-foreground">家族の予定・買い物・分担を1か所に</p>
         </div>
