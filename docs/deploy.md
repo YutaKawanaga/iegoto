@@ -10,6 +10,10 @@
    - **Pooled connection** (`-pooler` を含む) → 環境変数 `DATABASE_URL`
    - **Direct connection** → 環境変数 `DIRECT_URL`（`prisma migrate deploy` 用）
    - Vercel の Neon 連携を使った場合は自動設定される変数名を上記に合わせてリネームする
+3. リージョンは **Singapore (aws-ap-southeast-1)** を選ぶ（現行環境の実値）。
+   `vercel.json` の `"regions": ["sin1"]` はこれに合わせて関数を同居させる設定。
+   Neon のリージョンを変えた場合は `regions` も揃えること（関数↔DB 間の往復が
+   リクエストごとに複数回発生するため、離れているとそれだけで数百msの遅延になる）
 
 ## 2. Google OAuth クライアント
 
