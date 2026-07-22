@@ -50,12 +50,29 @@
 2. トップ → Google ログイン → 家族作成 → 予定作成 → カレンダー表示
 3. スマホからも同 URL で確認（375px レイアウト）
 
-## 5. まだやらないこと（フェーズ3/4。09-implementation-order.md）
+## 5. バックアップと復元
 
-- Cloud Scheduler の3ジョブ（Google 同期・リマインダー・バックアップ）と `CRON_SECRET`
-- Web Push / PWA
-- 日次 pg_dump バックアップ（**フェーズ2の実運用開始までに 10 §3 の手順で必ず設定する**。
-  それまでの保護は Neon の restore 履歴のみ）
+日次バックアップは GitHub Actions（`.github/workflows/db-backup.yml`）で自動実行される:
+
+- 毎日 JST 03:00 に `pg_dump -Fc` を実行し Actions Artifacts に保存（30日保持。毎月1日分は90日保持）
+- **初回セットアップ（必須・1回だけ）**: GitHub リポジトリの Settings → Secrets and variables →
+  Actions に `NEON_DIRECT_URL`（Neon の direct 接続文字列 = Vercel の `DIRECT_URL` と同じ値）を登録し、
+  Actions タブから db-backup を手動実行（workflow_dispatch）して成功することを確認する
+
+復元手順（事故時）:
+
+1. GitHub → Actions → db-backup → 対象日の実行 → Artifacts から `iegoto.dump` をダウンロード
+2. Neon コンソールで復元先ブランチ（または新プロジェクト）を作成し、direct 接続文字列を控える
+3. `pg_restore -d "<復元先のdirect接続文字列>" --clean --if-exists --no-owner --no-privileges iegoto.dump`
+4. 内容確認後、Vercel の `DATABASE_URL` / `DIRECT_URL` を復元先に切り替えて Redeploy
+
+補足: まず Neon の Restore（ブランチの過去時点復元。Free は直近24時間）を検討し、
+それより古い時点に戻したい場合に本手順を使う。アプリ層の論理削除が第一の防御線である点は 10 §3 のとおり。
+
+## 6. まだやらないこと（フェーズ3/4。09-implementation-order.md）
+
+- Google カレンダー同期（フェーズ3。当面見送り）
+- Web Push / PWA 仕上げ（フェーズ4）とリマインダー配信ジョブ
 
 ## ローカル開発クイックスタート
 
