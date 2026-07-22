@@ -159,6 +159,7 @@ export const appRouter = router({
       .input(z.object({ itemId: z.string().uuid() }))
       .mutation(({ ctx, input }) => shopping.deleteItem(ctx, input)),
     uncheckedCount: familyProcedure.query(({ ctx }) => shopping.countUnchecked(ctx)),
+    frequentItems: familyProcedure.query(({ ctx }) => shopping.frequentItemNames(ctx)),
   }),
 
   featureFlags: router({

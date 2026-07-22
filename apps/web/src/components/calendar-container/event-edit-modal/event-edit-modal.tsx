@@ -29,7 +29,32 @@ export function EventEditModal({ target, family, onClose }: Props) {
 
   return (
     <Dialog open onOpenChange={(open) => !open && onClose()}>
-      <DialogContent title={f.mode === 'create' ? '予定を作成' : '予定を編集'}>
+      <DialogContent
+        title={f.mode === 'create' ? '予定を作成' : '予定を編集'}
+        footer={
+          <>
+            {f.scopeDialog !== null && (
+              <ScopeDialog
+                action={f.scopeDialog}
+                onCancel={f.closeScopeDialog}
+                onSubmit={f.submitWithScope}
+              />
+            )}
+            <div className="flex justify-between">
+              {f.mode === 'edit' ? (
+                <Button variant="destructive" onClick={f.requestDelete} disabled={f.isPending}>
+                  削除
+                </Button>
+              ) : (
+                <span />
+              )}
+              <Button onClick={f.requestSave} disabled={f.isPending}>
+                保存
+              </Button>
+            </div>
+          </>
+        }
+      >
         <div className="space-y-4">
           <div className="relative">
             <Input
@@ -197,28 +222,7 @@ export function EventEditModal({ target, family, onClose }: Props) {
             <Label>メモ</Label>
             <Textarea value={f.memo} onChange={(e) => f.setMemo(e.target.value)} maxLength={2000} />
           </div>
-
-          <div className="flex justify-between pt-2">
-            {f.mode === 'edit' ? (
-              <Button variant="destructive" onClick={f.requestDelete} disabled={f.isPending}>
-                削除
-              </Button>
-            ) : (
-              <span />
-            )}
-            <Button onClick={f.requestSave} disabled={f.isPending}>
-              保存
-            </Button>
-          </div>
         </div>
-
-        {f.scopeDialog !== null && (
-          <ScopeDialog
-            action={f.scopeDialog}
-            onCancel={f.closeScopeDialog}
-            onSubmit={f.submitWithScope}
-          />
-        )}
       </DialogContent>
     </Dialog>
   )
@@ -236,7 +240,7 @@ function ScopeDialog({
 }) {
   const [scope, setScope] = useState<EditScope>('this')
   return (
-    <div className="mt-4 rounded-lg border border-border bg-muted/50 p-4">
+    <div className="mb-3 rounded-lg border border-border bg-muted/50 p-4">
       <p className="mb-3 text-sm font-medium">
         繰り返し予定を{action === 'save' ? '変更' : '削除'}する範囲
       </p>
