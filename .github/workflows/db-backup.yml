@@ -1,0 +1,74 @@
+# 日次DBバックアップ (10-vercel-hosting.md §3 の GitHub Actions 版)
+#
+# Neon 本番DBを pg_dump (custom format) して Actions Artifacts に保存する。
+# - 日次: 毎日 JST 03:00 に実行、30日保持
+# - 月次: 毎月1日の実行分は 90日保持 (Artifacts の上限。R2/GCS へ移す場合は12ヶ月保持に延ばす)
+# - 手動: workflow_dispatch でいつでも実行可能 (シークレット設定後の動作確認にも使う)
+#
+# 必要なシークレット:
+#   NEON_DIRECT_URL: Neon の direct 接続文字列 (pooler を経由しないもの。DIRECT_URL と同じ値)
+#
+# 復元手順は docs/deploy.md「バックアップと復元」を参照
+name: db-backup
+
+on:
+  schedule:
+    - cron: '0 18 * * *' # JST 03:00
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  dump:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: シークレット存在チェック
+        env:
+          NEON_DIRECT_URL: ${{ secrets.NEON_DIRECT_URL }}
+        run: |
+          if [ -z "$NEON_DIRECT_URL" ]; then
+            echo "::error::シークレット NEON_DIRECT_URL が未設定です。リポジトリの Settings > Secrets and variables > Actions で Neon の direct 接続文字列を登録してください"
+            exit 1
+          fi
+
+      - name: バックアップ名と保持期間を決定 (毎月1日は月次扱いで長期保持)
+        id: meta
+        run: |
+          today=$(date -u +%Y%m%d)
+          if [ "$(date -u +%d)" = "01" ]; then
+            echo "name=db-backup-monthly-${today}" >> "$GITHUB_OUTPUT"
+            echo "retention=90" >> "$GITHUB_OUTPUT"
+          else
+            echo "name=db-backup-daily-${today}" >> "$GITHUB_OUTPUT"
+            echo "retention=30" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: pg_dump (Neon の PostgreSQL バージョンに合わせて postgres:17 を使用)
+        env:
+          NEON_DIRECT_URL: ${{ secrets.NEON_DIRECT_URL }}
+        run: |
+          mkdir -p backup
+          docker run --rm -v "$PWD/backup:/backup" -e NEON_DIRECT_URL postgres:17 \
+            pg_dump "$NEON_DIRECT_URL" -Fc --no-owner --no-privileges -f /backup/iegoto.dump
+          ls -la backup/
+          # 空dumpをバックアップ成功と誤認しないためのガード
+          size=$(stat -c %s backup/iegoto.dump)
+          if [ "$size" -lt 1024 ]; then
+            echo "::error::dumpファイルが小さすぎます (${size} bytes)。接続先を確認してください"
+            exit 1
+          fi
+
+      - name: 復元可能性チェック (アーカイブ目次が読めること)
+        run: |
+          docker run --rm -v "$PWD/backup:/backup" postgres:17 \
+            pg_restore --list /backup/iegoto.dump | head -5
+
+      - name: Artifacts へ保存
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.meta.outputs.name }}
+          path: backup/iegoto.dump
+          retention-days: ${{ steps.meta.outputs.retention }}
+          if-no-files-found: error
