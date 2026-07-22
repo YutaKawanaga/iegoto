@@ -12,6 +12,10 @@ const envSchema = z.object({
   /** '1' で開発用ログインバイパス有効 (本番では設定しない) */
   AUTH_DEV_BYPASS: z.string().optional(),
   CRON_SECRET: z.string().optional(),
+  /** Web Push (F-08)。未設定なら通知機能は無効のまま起動する */
+  VAPID_PUBLIC_KEY: z.string().default(''),
+  VAPID_PRIVATE_KEY: z.string().default(''),
+  VAPID_SUBJECT: z.string().default('mailto:admin@example.com'),
   NODE_ENV: z.string().default('development'),
 })
 

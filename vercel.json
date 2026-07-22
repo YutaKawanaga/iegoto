@@ -11,7 +11,7 @@
     { "source": "/jobs/:path*", "destination": "/api" },
     { "source": "/health", "destination": "/api" },
     {
-      "source": "/((?!api|assets|favicon|apple-touch-icon|icon-|site\\.webmanifest).*)",
+      "source": "/((?!api|assets|favicon|apple-touch-icon|icon-|site\\.webmanifest|sw\\.js).*)",
       "destination": "/index.html"
     }
   ]
