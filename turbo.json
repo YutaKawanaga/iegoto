@@ -9,7 +9,8 @@
       "outputs": ["dist/**"]
     },
     "test": {
-      "dependsOn": ["^build", "generate"]
+      "dependsOn": ["^build", "generate"],
+      "env": ["DATABASE_URL", "DIRECT_URL"]
     },
     "typecheck": {
       "dependsOn": ["^build", "generate"]
