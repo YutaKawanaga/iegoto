@@ -1,27 +1,32 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-  <!-- iegoto アプリアイコン: 家族カレンダー (カレンダー + ハート) -->
+  <!-- iegoto アプリアイコン: 巣箱と鳥の家族 (家=iegoto、鳥=家族) -->
   <defs>
     <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
       <stop offset="0" stop-color="#2dd4bf"/>
       <stop offset="1" stop-color="#0f766e"/>
     </linearGradient>
-    <linearGradient id="heart" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="#fb7185"/>
-      <stop offset="1" stop-color="#e11d48"/>
-    </linearGradient>
   </defs>
   <rect width="512" height="512" rx="116" fill="url(#bg)"/>
-  <!-- カレンダーの吊りリング -->
-  <rect x="162" y="84" width="28" height="84" rx="14" fill="#ffffff"/>
-  <rect x="322" y="84" width="28" height="84" rx="14" fill="#ffffff"/>
-  <!-- カレンダー本体 -->
-  <rect x="88" y="132" width="336" height="296" rx="44" fill="#ffffff"/>
-  <!-- ハート (家族) -->
-  <path fill="url(#heart)" d="M256 380
-    C 234 362, 156 312, 156 256
-    C 156 220, 184 196, 216 196
-    C 234 196, 249 206, 256 220
-    C 263 206, 278 196, 296 196
-    C 328 196, 356 220, 356 256
-    C 356 312, 278 362, 256 380 Z"/>
+  <!-- 巣箱: 屋根 + 本体 + 入り口 -->
+  <path d="M136 222 L256 114 L376 222" fill="none" stroke="#ffffff" stroke-width="44" stroke-linecap="round" stroke-linejoin="round"/>
+  <rect x="158" y="206" width="196" height="196" rx="30" fill="#ffffff"/>
+  <circle cx="256" cy="282" r="46" fill="#0f766e"/>
+  <!-- ヒナ (入り口から顔を出す) -->
+  <circle cx="256" cy="298" r="30" fill="#fbbf24"/>
+  <path d="M280 292 L298 300 L280 308 Z" fill="#f97316"/>
+  <circle cx="266" cy="290" r="5.5" fill="#ffffff"/>
+  <circle cx="268" cy="290" r="2.6" fill="#1e293b"/>
+  <!-- 親鳥2羽 (屋根の両肩) -->
+  <path d="M118 130 L92 116 L99 143 Z" fill="#f87171"/>
+  <circle cx="150" cy="134" r="34" fill="#f87171"/>
+  <circle cx="143.88" cy="140.12" r="15.3" fill="#fca5a5"/>
+  <path d="M178 125 L203 135 L178 145 Z" fill="#f59e0b"/>
+  <circle cx="164.28" cy="123.8" r="5.78" fill="#ffffff"/>
+  <circle cx="166.32" cy="123.8" r="2.72" fill="#1e293b"/>
+  <path d="M394 130 L420 116 L413 143 Z" fill="#38bdf8"/>
+  <circle cx="362" cy="134" r="34" fill="#38bdf8"/>
+  <circle cx="368.12" cy="140.12" r="15.3" fill="#7dd3fc"/>
+  <path d="M334 125 L309 135 L334 145 Z" fill="#f59e0b"/>
+  <circle cx="347.72" cy="123.8" r="5.78" fill="#ffffff"/>
+  <circle cx="345.68" cy="123.8" r="2.72" fill="#1e293b"/>
 </svg>
