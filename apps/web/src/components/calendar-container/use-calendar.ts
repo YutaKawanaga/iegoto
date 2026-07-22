@@ -1,6 +1,7 @@
-import { useQuery } from '@tanstack/react-query'
+import { keepPreviousData, useQuery } from '@tanstack/react-query'
 import { useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
+import { usePersistentState } from '@/hooks/use-persistent-state'
 import { useRealtime } from '@/hooks/use-realtime'
 import type { Occurrence } from '@/lib/api-types'
 import { useTRPC } from '@/lib/trpc'
@@ -59,12 +60,17 @@ export function useCalendar() {
   }, [view, anchor])
 
   const range = useMemo(() => gridRangeUtc(grid), [grid])
-  const eventsQuery = useQuery(
-    trpc.event.listInRange.queryOptions({ start: range.start, end: range.end }),
-  )
+  const eventsQuery = useQuery({
+    ...trpc.event.listInRange.queryOptions({ start: range.start, end: range.end }),
+    // 月送り/週送りで前の表示を残したまま裏で取得する (スピナー点滅による体感遅延の防止)
+    placeholderData: keepPreviousData,
+  })
 
-  // メンバーフィルタ (F-02)。空 = 全員表示
-  const [filterMemberIds, setFilterMemberIds] = useState<string[]>([])
+  // メンバーフィルタ (F-02)。空 = 全員表示。タブ切替後も維持するため永続化 (localStorage)
+  const [filterMemberIds, setFilterMemberIds] = usePersistentState<string[]>(
+    'iegoto.calendar.filterMembers',
+    [],
+  )
   const occurrences = useMemo(() => {
     const all = eventsQuery.data ?? []
     if (filterMemberIds.length === 0) {
@@ -131,7 +137,9 @@ export function useCalendar() {
         return p
       }),
     editTarget,
-    openCreate: (dateKey: string) => setEditTarget({ mode: 'create', dateKey }),
+    // フィルタで誰かを選択中なら、その人を新規予定の対象メンバーの初期値にする
+    openCreate: (dateKey: string) =>
+      setEditTarget({ mode: 'create', dateKey, defaultMemberIds: filterMemberIds }),
     openEdit: (occurrence: Occurrence) => setEditTarget({ mode: 'edit', occurrence }),
     closeEdit: () => setEditTarget(null),
     headerLabel:

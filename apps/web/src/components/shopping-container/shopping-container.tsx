@@ -54,8 +54,12 @@ export function ShoppingContainer({ family }: { family: FamilyInfo }) {
                 maxLength={50}
                 autoFocus
               />
-              <Button type="submit" size="sm">
-                作成
+              <Button
+                type="submit"
+                size="sm"
+                disabled={s.newListName.trim().length === 0 || s.isCreatingList}
+              >
+                {s.isCreatingList ? '作成中…' : '作成'}
               </Button>
               <Button
                 type="button"
@@ -94,13 +98,34 @@ export function ShoppingContainer({ family }: { family: FamilyInfo }) {
               onChange={(e) => s.setNewListName(e.target.value)}
               maxLength={50}
             />
-            <Button type="submit" disabled={s.newListName.trim().length === 0}>
-              作成
+            <Button type="submit" disabled={s.newListName.trim().length === 0 || s.isCreatingList}>
+              {s.isCreatingList ? '作成中…' : '作成'}
             </Button>
           </form>
         </div>
       ) : (
         <div className="rounded-xl border border-border bg-card">
+          <div className="flex items-center justify-between border-b border-border px-3 py-2">
+            <p className="text-sm font-semibold">{s.activeList.name}</p>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="text-muted-foreground hover:text-destructive"
+              disabled={s.isDeletingList}
+              onClick={() => {
+                if (
+                  window.confirm(
+                    `リスト「${s.activeList?.name}」を削除しますか？中のアイテムもすべて削除されます`,
+                  )
+                ) {
+                  s.removeActiveList()
+                }
+              }}
+            >
+              <Trash2 className="h-4 w-4" />
+              リストを削除
+            </Button>
+          </div>
           <form
             className="flex items-center gap-2 border-b border-border p-3"
             onSubmit={(e) => {
@@ -114,7 +139,7 @@ export function ShoppingContainer({ family }: { family: FamilyInfo }) {
               onChange={(e) => s.setNewItemName(e.target.value)}
               maxLength={100}
             />
-            <Button type="submit" disabled={s.newItemName.trim().length === 0}>
+            <Button type="submit" disabled={s.newItemName.trim().length === 0 || s.isAddingItem}>
               追加
             </Button>
           </form>

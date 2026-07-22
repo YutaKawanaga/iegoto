@@ -8,7 +8,7 @@ import { jstDateKey } from '@/utils/date-format'
 import { buildRRuleBody, parseRRuleBodyToForm, type RecurrenceForm } from '@/utils/recurrence'
 
 export type EditTarget =
-  | { mode: 'create'; dateKey: string }
+  | { mode: 'create'; dateKey: string; defaultMemberIds?: string[] }
   | { mode: 'edit'; occurrence: Occurrence }
 
 export type EditScope = 'this' | 'following' | 'all'
@@ -68,7 +68,15 @@ export function useEventForm(target: EditTarget, family: FamilyInfo, onClose: ()
     }
     return '11:00'
   })
-  const [targetMemberIds, setTargetMemberIds] = useState<string[]>(editing?.targetMemberIds ?? [])
+  const [targetMemberIds, setTargetMemberIds] = useState<string[]>(() => {
+    if (editing !== null) {
+      return editing.targetMemberIds
+    }
+    // create 時: カレンダーのメンバーフィルタを初期値に (削除済みメンバーは除外)
+    const activeIds = new Set(family.members.filter((m) => !m.isDeleted).map((m) => m.id))
+    const defaults = target.mode === 'create' ? (target.defaultMemberIds ?? []) : []
+    return defaults.filter((id) => activeIds.has(id))
+  })
   const [assigneeMemberId, setAssigneeMemberId] = useState<string | null>(
     editing?.assigneeMemberId ?? null,
   )

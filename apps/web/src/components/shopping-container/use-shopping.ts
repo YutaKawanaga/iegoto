@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
 import { useAppToast } from '@/hooks/use-app-toast'
+import { usePersistentState } from '@/hooks/use-persistent-state'
 import { useRealtime } from '@/hooks/use-realtime'
 import { useTRPC } from '@/lib/trpc'
 
@@ -12,7 +13,11 @@ export function useShopping() {
   useRealtime('shopping')
 
   const listsQuery = useQuery(trpc.shopping.lists.queryOptions())
-  const [activeListId, setActiveListId] = useState<string | null>(null)
+  // タブ切替 (unmount) 後も選択中リストを維持するため永続化 (localStorage)
+  const [activeListId, setActiveListId] = usePersistentState<string | null>(
+    'iegoto.shopping.activeListId',
+    null,
+  )
   const [newItemName, setNewItemName] = useState('')
   const [newListName, setNewListName] = useState('')
   const [isAddingList, setIsAddingList] = useState(false)
@@ -100,10 +105,12 @@ export function useShopping() {
     newItemName,
     setNewItemName,
     submitNewItem: () => {
-      if (activeList !== null && newItemName.trim().length > 0) {
+      // isPending ガード: 連打による二重登録防止 (ボタン disable と二段構え)
+      if (activeList !== null && newItemName.trim().length > 0 && !addItem.isPending) {
         addItem.mutate({ listId: activeList.id, name: newItemName })
       }
     },
+    isAddingItem: addItem.isPending,
     toggleItem: (itemId: string, checked: boolean) => setChecked.mutate({ itemId, checked }),
     removeItem: (itemId: string) => deleteItem.mutate({ itemId }),
     isAddingList,
@@ -111,14 +118,16 @@ export function useShopping() {
     newListName,
     setNewListName,
     submitNewList: () => {
-      if (newListName.trim().length > 0) {
+      if (newListName.trim().length > 0 && !createList.isPending) {
         createList.mutate({ name: newListName })
       }
     },
+    isCreatingList: createList.isPending,
     removeActiveList: () => {
-      if (activeList !== null) {
+      if (activeList !== null && !deleteList.isPending) {
         deleteList.mutate({ listId: activeList.id })
       }
     },
+    isDeletingList: deleteList.isPending,
   }
 }
