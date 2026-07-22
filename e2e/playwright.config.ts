@@ -5,8 +5,7 @@ import { defineConfig } from '@playwright/test'
  * 前提: DATABASE_URL がマイグレーション済みのテスト用DBを指していること
  * (CI: .github/workflows/ci.yml の e2e ジョブ。ローカル: iegoto_test を推奨)
  */
-const DB_URL =
-  process.env.DATABASE_URL ?? 'postgresql://iegoto:iegoto@localhost:5432/iegoto_test'
+const DB_URL = process.env.DATABASE_URL ?? 'postgresql://iegoto:iegoto@localhost:5432/iegoto_test'
 
 export default defineConfig({
   testDir: './tests',
@@ -22,9 +21,7 @@ export default defineConfig({
     // CHROMIUM_PATH が設定されていればそれを使う (プリインストール済みブラウザの再利用)。
     // 未設定なら Playwright 管理のブラウザ (CI では playwright install で取得)
     launchOptions:
-      process.env.CHROMIUM_PATH === undefined
-        ? {}
-        : { executablePath: process.env.CHROMIUM_PATH },
+      process.env.CHROMIUM_PATH === undefined ? {} : { executablePath: process.env.CHROMIUM_PATH },
   },
   webServer: [
     {
