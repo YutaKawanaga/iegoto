@@ -10,6 +10,9 @@
     { "source": "/auth/:path*", "destination": "/api" },
     { "source": "/jobs/:path*", "destination": "/api" },
     { "source": "/health", "destination": "/api" },
-    { "source": "/((?!api|assets|favicon).*)", "destination": "/index.html" }
+    {
+      "source": "/((?!api|assets|favicon|apple-touch-icon|icon-|site\\.webmanifest).*)",
+      "destination": "/index.html"
+    }
   ]
 }
