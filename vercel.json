@@ -2,15 +2,26 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": null,
   "regions": ["sin1"],
-  "git": { "deploymentEnabled": false },
   "installCommand": "pnpm install --frozen-lockfile",
   "buildCommand": "pnpm --filter @iegoto/db run generate && pnpm --filter @iegoto/db exec prisma migrate deploy && pnpm --filter @iegoto/web run build && node scripts/build-vercel-function.mjs",
   "outputDirectory": "apps/web/dist",
   "rewrites": [
-    { "source": "/trpc/:path*", "destination": "/api" },
-    { "source": "/auth/:path*", "destination": "/api" },
-    { "source": "/jobs/:path*", "destination": "/api" },
-    { "source": "/health", "destination": "/api" },
+    {
+      "source": "/trpc/:path*",
+      "destination": "/api"
+    },
+    {
+      "source": "/auth/:path*",
+      "destination": "/api"
+    },
+    {
+      "source": "/jobs/:path*",
+      "destination": "/api"
+    },
+    {
+      "source": "/health",
+      "destination": "/api"
+    },
     {
       "source": "/((?!api|assets|favicon|apple-touch-icon|icon-|site\\.webmanifest|sw\\.js).*)",
       "destination": "/index.html"
