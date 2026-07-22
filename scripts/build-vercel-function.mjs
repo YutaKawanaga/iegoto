@@ -16,8 +16,7 @@ const root = resolve(import.meta.dirname, '..')
 const clientDir = resolve(root, 'packages/db/src/generated/client')
 const engines = readdirSync(clientDir).filter((f) => f.endsWith('.node'))
 // Vercel ランタイムは rhel。無ければローカル検証用に手元プラットフォームのものを使う
-const engine =
-  engines.find((f) => f.includes('rhel-openssl-3.0.x')) ?? engines[0]
+const engine = engines.find((f) => f.includes('rhel-openssl-3.0.x')) ?? engines[0]
 if (engine === undefined) {
   throw new Error(`Prisma エンジンが見つかりません: ${clientDir} (先に prisma generate を実行)`)
 }
