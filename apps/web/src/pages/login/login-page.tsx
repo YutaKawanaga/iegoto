@@ -1,4 +1,4 @@
-import { ListChecks, UserCheck, Users } from 'lucide-react'
+import { CalendarDays, ListChecks, Users } from 'lucide-react'
 import { useSearchParams } from 'react-router-dom'
 import { AppLogo } from '@/components/ui/app-logo'
 import { Button } from '@/components/ui/button'
@@ -6,7 +6,7 @@ import { useDocumentTitle } from '@/hooks/use-document-title'
 
 const FEATURES = [
   { icon: Users, text: 'スマホを持たない子どもも予定の主体に' },
-  { icon: UserCheck, text: '「誰の予定か」と「誰が対応するか」を分けて管理' },
+  { icon: CalendarDays, text: 'メンバーごとの色分けで「誰の予定か」がひと目でわかる' },
   { icon: ListChecks, text: '買い物リストも家族でリアルタイム共有' },
 ] as const
 

@@ -23,7 +23,7 @@ const REMINDER_OPTIONS = [
 
 type Props = { target: EditTarget; family: FamilyInfo; onClose: () => void }
 
-/** 予定の作成・編集モーダル (F-03)。対象メンバーと担当者を別項目で持つのが差別化点 */
+/** 予定の作成・編集モーダル (F-03)。送迎する人も対象メンバーに含めて表現する */
 export function EventEditModal({ target, family, onClose }: Props) {
   const f = useEventForm(target, family, onClose)
 
@@ -162,21 +162,6 @@ export function EventEditModal({ target, family, onClose }: Props) {
                 )
               })}
             </div>
-          </div>
-
-          <div className="space-y-1.5">
-            <Label>担当者 (誰が対応するか)</Label>
-            <Select
-              value={f.assigneeMemberId ?? ''}
-              onChange={(e) => f.setAssigneeMemberId(e.target.value === '' ? null : e.target.value)}
-            >
-              <option value="">担当者未定</option>
-              {f.members.map((m) => (
-                <option key={m.id} value={m.id}>
-                  {m.displayName}
-                </option>
-              ))}
-            </Select>
           </div>
 
           {!f.isAllDay && (

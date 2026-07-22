@@ -1,4 +1,4 @@
-import { Calendar, Home, ListChecks, Settings, UserCheck } from 'lucide-react'
+import { Calendar, Home, ListChecks, Settings } from 'lucide-react'
 import { NavLink, Outlet } from 'react-router-dom'
 import { AppLogo } from '@/components/ui/app-logo'
 import { cn } from '@/lib/utils'
@@ -7,7 +7,6 @@ const NAV_ITEMS = [
   { to: '/', label: '今日', icon: Home },
   { to: '/calendar', label: 'カレンダー', icon: Calendar },
   { to: '/shopping', label: '買い物', icon: ListChecks },
-  { to: '/assignments', label: '担当', icon: UserCheck },
   { to: '/settings', label: '設定', icon: Settings },
 ] as const
 
