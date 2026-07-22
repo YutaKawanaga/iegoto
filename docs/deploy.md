@@ -85,3 +85,16 @@ pnpm --filter @iegoto/api dev    # API :8000
 pnpm --filter @iegoto/web dev    # Web :7475 (→ /trpc は 8000 へプロキシ)
 # http://localhost:7475 → 「開発用ログイン」ボタンでログイン
 ```
+
+## 7. 本番デプロイの経路 (Deploy Hook)
+
+Vercel の Git 連携自動デプロイは「コミット作者が Vercel プロジェクトの協力者ではない」
+判定 (Hobby プランの制約。GitHub 連携が別の Vercel アカウントに紐づいている場合に発生)
+でブロックされるため、本番デプロイは Deploy Hook 経由に統一している:
+
+- main への push → `.github/workflows/deploy-production.yml` が Deploy Hook を起動
+- vercel.json で `git.deploymentEnabled: false` (Git 連携ビルドとPRプレビューは無効)
+- 必要シークレット: GitHub リポジトリの `VERCEL_DEPLOY_HOOK`
+  (Vercel → Settings → Git → Deploy Hooks で作成した URL)
+- 手動デプロイ: Actions タブから deploy-production を workflow_dispatch、
+  または Hook URL に直接 POST
