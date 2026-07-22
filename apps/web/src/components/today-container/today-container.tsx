@@ -18,14 +18,20 @@ export function TodayContainer({ family }: { family: FamilyInfo }) {
 
   return (
     <div className="space-y-5">
-      <h1 className="text-xl font-bold">
-        {new Intl.DateTimeFormat('ja-JP', {
-          timeZone: 'Asia/Tokyo',
-          month: 'long',
-          day: 'numeric',
-          weekday: 'long',
-        }).format(new Date())}
-      </h1>
+      <div className="rounded-2xl bg-gradient-to-r from-primary/15 to-primary/5 p-4">
+        <p className="text-xs font-medium text-primary">{family.name}</p>
+        <h1 className="text-xl font-bold">
+          {new Intl.DateTimeFormat('ja-JP', {
+            timeZone: 'Asia/Tokyo',
+            month: 'long',
+            day: 'numeric',
+            weekday: 'long',
+          }).format(new Date())}
+        </h1>
+        <p className="mt-1 text-xs text-muted-foreground">
+          今日の予定 {t.todayEvents.length}件 ・ 自分の担当 {t.myAssigned.length}件
+        </p>
+      </div>
 
       <Section title="今日の予定">
         {t.todayEvents.length === 0 ? (
@@ -45,7 +51,7 @@ export function TodayContainer({ family }: { family: FamilyInfo }) {
 
       <Link
         to="/shopping"
-        className="flex items-center justify-between rounded-xl border border-border bg-card p-4"
+        className="flex items-center justify-between rounded-xl border border-border bg-card p-4 shadow-sm transition-colors hover:bg-muted/40"
       >
         <span className="flex items-center gap-2 text-sm font-medium">
           <ListChecks className="h-5 w-5 text-primary" />

@@ -14,6 +14,7 @@ export function SettingsContainer({ family }: { family: FamilyInfo }) {
 
   return (
     <div className="space-y-6">
+      <h1 className="text-xl font-bold">設定</h1>
       <section>
         <h2 className="mb-2 text-sm font-semibold text-muted-foreground">家族</h2>
         <p className="rounded-xl border border-border bg-card p-4 text-sm font-medium">

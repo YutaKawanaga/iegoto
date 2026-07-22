@@ -15,44 +15,49 @@ export function AssignmentsContainer({ family }: { family: FamilyInfo }) {
   }
 
   return (
-    <Tabs defaultValue="unassigned">
-      <TabsList>
-        <TabsTrigger value="unassigned">担当者未定 ({a.unassigned.length})</TabsTrigger>
-        <TabsTrigger value="mine">自分の担当 ({a.mine.length})</TabsTrigger>
-      </TabsList>
-      <TabsContent value="unassigned" className="mt-3">
-        {a.unassigned.length === 0 ? (
-          <p className="py-8 text-center text-sm text-muted-foreground">
-            担当者未定の予定はありません 🎉
-          </p>
-        ) : (
-          <ul className="space-y-1.5">
-            {a.unassigned.map((occ) => (
-              <AssignmentRow key={rowKey(occ)} occ={occ}>
-                <Button
-                  size="sm"
-                  disabled={a.isClaiming}
-                  onClick={() => a.claim(occ, family.myMemberId)}
-                >
-                  担当する
-                </Button>
-              </AssignmentRow>
-            ))}
-          </ul>
-        )}
-      </TabsContent>
-      <TabsContent value="mine" className="mt-3">
-        {a.mine.length === 0 ? (
-          <p className="py-8 text-center text-sm text-muted-foreground">担当中の予定はありません</p>
-        ) : (
-          <ul className="space-y-1.5">
-            {a.mine.map((occ) => (
-              <AssignmentRow key={rowKey(occ)} occ={occ} />
-            ))}
-          </ul>
-        )}
-      </TabsContent>
-    </Tabs>
+    <div className="space-y-3">
+      <h1 className="text-xl font-bold">担当</h1>
+      <Tabs defaultValue="unassigned">
+        <TabsList>
+          <TabsTrigger value="unassigned">担当者未定 ({a.unassigned.length})</TabsTrigger>
+          <TabsTrigger value="mine">自分の担当 ({a.mine.length})</TabsTrigger>
+        </TabsList>
+        <TabsContent value="unassigned" className="mt-3">
+          {a.unassigned.length === 0 ? (
+            <p className="py-8 text-center text-sm text-muted-foreground">
+              担当者未定の予定はありません 🎉
+            </p>
+          ) : (
+            <ul className="space-y-1.5">
+              {a.unassigned.map((occ) => (
+                <AssignmentRow key={rowKey(occ)} occ={occ}>
+                  <Button
+                    size="sm"
+                    disabled={a.isClaiming}
+                    onClick={() => a.claim(occ, family.myMemberId)}
+                  >
+                    担当する
+                  </Button>
+                </AssignmentRow>
+              ))}
+            </ul>
+          )}
+        </TabsContent>
+        <TabsContent value="mine" className="mt-3">
+          {a.mine.length === 0 ? (
+            <p className="py-8 text-center text-sm text-muted-foreground">
+              担当中の予定はありません
+            </p>
+          ) : (
+            <ul className="space-y-1.5">
+              {a.mine.map((occ) => (
+                <AssignmentRow key={rowKey(occ)} occ={occ} />
+              ))}
+            </ul>
+          )}
+        </TabsContent>
+      </Tabs>
+    </div>
   )
 }
 
