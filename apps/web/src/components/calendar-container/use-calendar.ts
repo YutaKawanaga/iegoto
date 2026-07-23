@@ -111,6 +111,8 @@ export function useCalendar() {
   }
 
   const [editTarget, setEditTarget] = useState<EditTarget | null>(null)
+  // 日別ビュー (月セルタップで開く)。作成/編集モーダルと同時に開かないよう排他にする
+  const [dayKey, setDayKey] = useState<string | null>(null)
 
   return {
     view,
@@ -133,10 +135,18 @@ export function useCalendar() {
         return p
       }),
     editTarget,
+    dayKey,
+    openDay: (key: string) => setDayKey(key),
+    closeDay: () => setDayKey(null),
     // フィルタで誰かを選択中なら、その人を新規予定の対象メンバーの初期値にする
-    openCreate: (dateKey: string) =>
-      setEditTarget({ mode: 'create', dateKey, defaultMemberIds: filterMemberIds }),
-    openEdit: (occurrence: Occurrence) => setEditTarget({ mode: 'edit', occurrence }),
+    openCreate: (dateKey: string) => {
+      setDayKey(null)
+      setEditTarget({ mode: 'create', dateKey, defaultMemberIds: filterMemberIds })
+    },
+    openEdit: (occurrence: Occurrence) => {
+      setDayKey(null)
+      setEditTarget({ mode: 'edit', occurrence })
+    },
     closeEdit: () => setEditTarget(null),
     headerLabel:
       view === 'week'

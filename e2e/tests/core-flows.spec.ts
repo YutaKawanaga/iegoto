@@ -11,6 +11,14 @@ async function login(page: Page) {
   await page.waitForLoadState('networkidle')
 }
 
+/** 今日の日セル → 日別ビュー → ヘッダのプラスで作成モーダルを開く (FAB廃止後の導線) */
+async function openCreateModal(page: Page) {
+  const jstNow = new Date(Date.now() + 9 * 3600_000)
+  const label = `${jstNow.getUTCFullYear()}年${jstNow.getUTCMonth() + 1}月${jstNow.getUTCDate()}日`
+  await page.click(`button[aria-label="${label}"]`)
+  await page.getByRole('button', { name: '予定を作成' }).click()
+}
+
 test.describe
   .serial('オンボーディング → 予定 → 買い物', () => {
     test('新規ユーザーは家族を作成してホームに入れる', async ({ page }) => {
@@ -39,7 +47,7 @@ test.describe
       await page.goto('/')
       // 長男フィルタを選択してから作成 → モーダルで長男が初期選択
       await page.getByRole('button', { name: '長男' }).click()
-      await page.click('button[aria-label="予定を作成"]')
+      await openCreateModal(page)
       const dialog = page.getByRole('dialog')
       await expect(dialog.locator('button', { hasText: '長男' }).first()).toHaveClass(
         /border-primary/,
@@ -57,7 +65,7 @@ test.describe
       await page.setViewportSize({ width: 390, height: 700 })
       await login(page)
       await page.goto('/')
-      await page.click('button[aria-label="予定を作成"]')
+      await openCreateModal(page)
       const save = page.getByRole('button', { name: '保存' })
       await page.evaluate(() => {
         const body = document.querySelector('[role="dialog"] .overflow-y-auto')

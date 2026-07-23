@@ -16,11 +16,14 @@ export function DialogContent({
   children,
   title,
   footer,
+  headerAction,
   ...props
 }: ComponentProps<typeof DialogPrimitive.Content> & {
   title: string
   children: ReactNode
   footer?: ReactNode
+  /** ヘッダ右側 (閉じるボタンの左) に置く操作。日別ビューの「予定を作成」等 */
+  headerAction?: ReactNode
 }) {
   return (
     <DialogPrimitive.Portal>
@@ -34,9 +37,12 @@ export function DialogContent({
       >
         <div className="flex shrink-0 items-center justify-between border-b border-border px-5 py-3.5">
           <DialogPrimitive.Title className="text-base font-semibold">{title}</DialogPrimitive.Title>
-          <DialogPrimitive.Close className="rounded-md p-1 hover:bg-muted" aria-label="閉じる">
-            <X className="h-4 w-4" />
-          </DialogPrimitive.Close>
+          <div className="flex items-center gap-1">
+            {headerAction}
+            <DialogPrimitive.Close className="rounded-md p-1 hover:bg-muted" aria-label="閉じる">
+              <X className="h-4 w-4" />
+            </DialogPrimitive.Close>
+          </div>
         </div>
         <div className="flex-1 overflow-y-auto p-5">{children}</div>
         {footer !== undefined && (

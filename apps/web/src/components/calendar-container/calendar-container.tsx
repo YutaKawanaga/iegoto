@@ -6,6 +6,7 @@ import type { FamilyInfo } from '@/hooks/use-me'
 import { MEMBER_BG } from '@/lib/member-colors'
 import { cn } from '@/lib/utils'
 import { WEEKDAY_LABELS } from '@/utils/recurrence'
+import { DaySheet } from './day-sheet'
 import { EventChip } from './event-chip'
 import { EventEditModal } from './event-edit-modal/event-edit-modal'
 import { useCalendar } from './use-calendar'
@@ -77,14 +78,16 @@ export function CalendarContainer({ family }: { family: FamilyInfo }) {
         <WeekView c={c} family={family} />
       )}
 
-      <Button
-        className="fixed bottom-20 right-4 z-30 h-14 w-14 rounded-full shadow-lg md:bottom-8"
-        size="icon"
-        aria-label="予定を作成"
-        onClick={() => c.openCreate(c.todayKey)}
-      >
-        <Plus className="h-6 w-6" />
-      </Button>
+      {c.dayKey !== null && (
+        <DaySheet
+          dateKey={c.dayKey}
+          events={c.byDate.get(c.dayKey) ?? []}
+          family={family}
+          onCreate={() => c.openCreate(c.dayKey ?? c.todayKey)}
+          onEdit={c.openEdit}
+          onClose={c.closeDay}
+        />
+      )}
 
       {c.editTarget !== null && (
         <EventEditModal target={c.editTarget} family={family} onClose={c.closeEdit} />
@@ -115,7 +118,8 @@ function MonthView({ c, family }: ViewProps) {
             <button
               key={day.dateKey}
               type="button"
-              onClick={() => c.openCreate(day.dateKey)}
+              aria-label={`${Number(day.dateKey.slice(0, 4))}年${Number(day.dateKey.slice(5, 7))}月${day.day}日`}
+              onClick={() => c.openDay(day.dateKey)}
               className={cn(
                 'min-h-20 min-w-0 border-b border-r border-border p-1 text-left align-top transition-colors last:border-r-0 hover:bg-muted/40 md:min-h-28',
                 !day.inMonth && 'bg-muted/30 text-muted-foreground',
@@ -132,13 +136,13 @@ function MonthView({ c, family }: ViewProps) {
                 {day.day}
               </span>
               <div className="space-y-0.5">
+                {/* onClick なし = セル全体のタップで日別ビューを開く (小さいチップの誤タップ防止) */}
                 {events.slice(0, 3).map((occ) => (
                   <EventChip
                     key={`${occ.eventId}-${occ.originalStartAt.getTime()}`}
                     occurrence={occ}
                     members={family.members}
                     compact
-                    onClick={() => c.openEdit(occ)}
                   />
                 ))}
                 {events.length > 3 && (
@@ -170,7 +174,12 @@ function WeekView({ c, family }: ViewProps) {
               >
                 {Number(day.dateKey.slice(8, 10))}日 ({WEEKDAY_LABELS[day.weekday]})
               </p>
-              <Button variant="ghost" size="sm" onClick={() => c.openCreate(day.dateKey)}>
+              <Button
+                variant="ghost"
+                size="sm"
+                aria-label="予定を作成"
+                onClick={() => c.openCreate(day.dateKey)}
+              >
                 <Plus className="h-4 w-4" />
               </Button>
             </div>
