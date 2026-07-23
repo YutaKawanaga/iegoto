@@ -10,6 +10,7 @@ import { suggestPastEvents } from './event/usecases/suggest-past-events.js'
 import { updateEvent } from './event/usecases/update-event.js'
 import { issueInvitation } from './family/usecases/issue-invitation.js'
 import { joinFamilyByInvitation, previewInvitation } from './family/usecases/join-family.js'
+import { renameFamily } from './family/usecases/rename-family.js'
 import { signUpFamily } from './family/usecases/sign-up-family.js'
 import { addMember } from './member/usecases/add-member.js'
 import { leaveFamily } from './member/usecases/leave-family.js'
@@ -43,6 +44,9 @@ export const appRouter = router({
         }),
       )
       .mutation(({ ctx, input }) => signUpFamily(ctx, input)),
+    rename: familyProcedure
+      .input(z.object({ name: z.string().min(1).max(50) }))
+      .mutation(({ ctx, input }) => renameFamily(ctx, input)),
     invitation: router({
       issue: familyProcedure.mutation(({ ctx }) => issueInvitation(ctx)),
       active: familyProcedure.query(async ({ ctx }) => {
@@ -80,6 +84,7 @@ export const appRouter = router({
           memberId: z.string().uuid(),
           displayName: z.string().min(1).max(30).optional(),
           color: memberColorSchema.optional(),
+          icon: z.string().max(16).nullable().optional(),
         }),
       )
       .mutation(({ ctx, input }) => updateMember(ctx, input)),

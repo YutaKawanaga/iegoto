@@ -61,6 +61,28 @@ test.describe
       await expect(page.getByText('水泳教室').first()).toBeVisible()
     })
 
+    test('メンバーの名前・アイコンを変更でき、家族名も変更できる', async ({ page }) => {
+      await login(page)
+      await page.goto('/settings')
+
+      // メンバー編集: 名前 + アイコン
+      await page.getByRole('button', { name: '長男を編集' }).click()
+      const dialog = page.getByRole('dialog')
+      await dialog.getByLabel('名前').fill('たろう')
+      await dialog.getByRole('button', { name: 'アイコン 👦' }).click()
+      await dialog.getByRole('button', { name: '保存' }).click()
+      await expect(page.getByText('メンバーを更新しました')).toBeVisible()
+      await expect(page.getByText('たろう', { exact: true })).toBeVisible()
+      await expect(page.locator('main').getByText('👦')).toBeVisible()
+
+      // 家族名の変更
+      await page.getByRole('button', { name: '家族名を変更' }).click()
+      await page.getByLabel('家族名').fill('E2E家(改)')
+      await page.getByRole('button', { name: '保存' }).click()
+      await expect(page.getByText('家族名を変更しました')).toBeVisible()
+      await expect(page.getByText('E2E家(改)')).toBeVisible()
+    })
+
     test('予定編集モーダルはスクロールしても保存ボタンが見える', async ({ page }) => {
       await page.setViewportSize({ width: 390, height: 700 })
       await login(page)

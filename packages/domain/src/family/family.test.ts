@@ -3,7 +3,7 @@ import { DomainError } from '../shared/errors.js'
 import { newId } from '../shared/id.js'
 import { createFamily } from './family.js'
 import { invitationExpiry, isInvitationUsable } from './invitation.js'
-import { createMember, MEMBER_COLORS, validateDisplayName } from './member.js'
+import { createMember, MEMBER_COLORS, validateDisplayName, validateMemberIcon } from './member.js'
 
 describe('createFamily', () => {
   it('名前を trim して家族を作る', () => {
@@ -32,6 +32,21 @@ describe('createMember / validateDisplayName', () => {
     expect(validateDisplayName(' パパ ')).toBe('パパ')
     expect(() => validateDisplayName('  ')).toThrow(DomainError)
     expect(() => validateDisplayName('あ'.repeat(31))).toThrow(DomainError)
+  })
+
+  it('アイコンは省略可・空文字は null 扱い・ZWJ結合絵文字も許容する', () => {
+    const member = createMember({
+      familyId: newId<'Family'>(),
+      displayName: '長男',
+      color: MEMBER_COLORS[0],
+      sortOrder: 1,
+    })
+    expect(member.icon).toBeNull()
+    expect(validateMemberIcon(null)).toBeNull()
+    expect(validateMemberIcon('  ')).toBeNull()
+    expect(validateMemberIcon('👦')).toBe('👦')
+    expect(validateMemberIcon('👨‍👩‍👧‍👦')).toBe('👨‍👩‍👧‍👦')
+    expect(() => validateMemberIcon('あ'.repeat(17))).toThrow(DomainError)
   })
 })
 

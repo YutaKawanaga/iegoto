@@ -156,7 +156,11 @@ export function EventEditModal({ target, family, onClose }: Props) {
                       selected && 'border-primary bg-primary/10',
                     )}
                   >
-                    <span className={cn('h-2.5 w-2.5 rounded-full', MEMBER_BG[m.color])} />
+                    {m.icon !== null ? (
+                      <span className="text-base leading-none">{m.icon}</span>
+                    ) : (
+                      <span className={cn('h-2.5 w-2.5 rounded-full', MEMBER_BG[m.color])} />
+                    )}
                     {m.displayName}
                   </button>
                 )

@@ -74,6 +74,13 @@ describe('FamilyRepository', () => {
     const found = await new FamilyRepository(db).find(family.id)
     expect(found).toEqual(family)
   })
+
+  it('updateName で家族名を変更できる', async () => {
+    const { family } = await seedFamily()
+    await new FamilyRepository(db).updateName(family.id, '新しい家')
+    const found = await new FamilyRepository(db).find(family.id)
+    expect(found?.name).toBe('新しい家')
+  })
 })
 
 describe('MemberRepository', () => {
@@ -87,6 +94,20 @@ describe('MemberRepository', () => {
 
     const all = await repo.list(family.id, { includeDeleted: true })
     expect(all).toHaveLength(2)
+  })
+
+  it('update で名前・アイコン・カラーを変更でき、icon は null で未設定に戻せる', async () => {
+    const { family, kid } = await seedFamily()
+    const repo = new MemberRepository(db)
+    await repo.update(family.id, kid.id, { displayName: 'たろう', icon: '👦', color: 'leaf' })
+    const updated = await repo.find(family.id, kid.id)
+    expect(updated?.displayName).toBe('たろう')
+    expect(updated?.icon).toBe('👦')
+    expect(updated?.color).toBe('leaf')
+
+    await repo.update(family.id, kid.id, { icon: null })
+    const cleared = await repo.find(family.id, kid.id)
+    expect(cleared?.icon).toBeNull()
   })
 
   it('テナント境界: 他家族の familyId では softDelete できない', async () => {
