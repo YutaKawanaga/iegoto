@@ -1,7 +1,7 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { renderHook } from '@testing-library/react'
 import { createElement, type ReactNode } from 'react'
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, type MockInstance, vi } from 'vitest'
 import { useRealtime } from './use-realtime'
 
 // useTRPC は tRPC Provider を要求するため、pathFilter だけ返すスタブに差し替える
@@ -18,7 +18,7 @@ function setVisibility(state: 'visible' | 'hidden') {
 
 describe('useRealtime', () => {
   let queryClient: QueryClient
-  let invalidateSpy: ReturnType<typeof vi.spyOn>
+  let invalidateSpy: MockInstance<QueryClient['invalidateQueries']>
 
   const wrapper = ({ children }: { children: ReactNode }) =>
     createElement(QueryClientProvider, { client: queryClient }, children)
