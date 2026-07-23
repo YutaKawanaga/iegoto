@@ -23,7 +23,12 @@ export function EventChip({ occurrence, members, compact = false, onClick }: Pro
   return (
     <button
       type="button"
-      onClick={onClick}
+      onClick={(e) => {
+        // 月表示では日セル自体が「予定作成」ボタンのため、バブリングすると
+        // 編集ではなく作成モーダルが開いてしまう (E2Eで検出したバグの修正)
+        e.stopPropagation()
+        onClick()
+      }}
       className={cn(
         'block w-full truncate rounded px-1 py-0.5 text-left text-[11px] leading-tight',
         compact ? 'md:text-xs' : 'text-sm py-1.5 px-2 rounded-lg',
