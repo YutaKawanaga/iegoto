@@ -116,6 +116,33 @@ test.describe
       await expect(page.locator('main').getByText('歯医者(変更後)').first()).toBeVisible()
     })
 
+    test('複数日の終日予定は日毎のチップではなく連続バーで表示される', async ({ page }) => {
+      await login(page, ownerEmail)
+      await page.goto('/')
+      await openCreateModal(page)
+      const dialog = page.getByRole('dialog')
+      await dialog.getByPlaceholder('タイトル').fill('沖縄旅行')
+      await dialog.getByLabel('終日').click()
+      // 終了日を2日後に (3日間の予定)
+      const jstNow = new Date(Date.now() + 9 * 3600_000)
+      const end = new Date(jstNow.getTime() + 2 * 24 * 3600_000)
+      const endKey = `${end.getUTCFullYear()}-${String(end.getUTCMonth() + 1).padStart(2, '0')}-${String(end.getUTCDate()).padStart(2, '0')}`
+      await dialog.locator('input[type="date"]').nth(1).fill(endKey)
+      await dialog.getByRole('button', { name: '保存' }).click()
+      await expect(page.getByText('予定を作成しました')).toBeVisible()
+
+      // 3日間の予定が日毎チップ (3個) ではなく連続バー (週をまたぐ場合のみ最大2本) になる
+      const bars = page.locator('main').getByText('沖縄旅行')
+      await expect(bars.first()).toBeVisible()
+      const count = await bars.count()
+      expect(count).toBeLessThanOrEqual(2)
+
+      // バーのタップで編集モーダルが開く
+      await bars.first().click()
+      await expect(page.getByRole('dialog').getByPlaceholder('タイトル')).toHaveValue('沖縄旅行')
+      await page.getByRole('button', { name: '閉じる' }).click()
+    })
+
     test('買い物アイテムのチェックと解除が反映される', async ({ page }) => {
       await login(page, ownerEmail)
       await page.goto('/shopping')

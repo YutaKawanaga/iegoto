@@ -14,6 +14,7 @@ import {
   weekGrid,
 } from '@/utils/calendar-grid'
 import { jstDateKey } from '@/utils/date-format'
+import type { MultiDayItem } from '@/utils/multi-day-layout'
 import type { EditTarget } from './event-edit-modal/use-event-form'
 
 export type CalendarView = 'month' | 'week'
@@ -79,20 +80,45 @@ export function useCalendar() {
     return all.filter((o) => o.targetMemberIds.some((id) => filterMemberIds.includes(id)))
   }, [eventsQuery.data, filterMemberIds])
 
-  /** 日付キー → その日の occurrence 一覧 (開始時刻順 = 重複の並列表示) */
-  const byDate = useMemo(() => {
-    const map = new Map<string, Occurrence[]>()
+  /**
+   * byDate: 日付キー → その日の occurrence 一覧 (日別ビュー・週ビュー用。複数日予定も各日に含む)
+   * singleByDate: 単日予定のみの日別マップ (月グリッドのチップ用)
+   * multiDay: 複数日予定 (月グリッドでは連続バーとして描画する)
+   */
+  const { byDate, singleByDate, multiDay } = useMemo(() => {
+    const byDate = new Map<string, Occurrence[]>()
+    const singleByDate = new Map<string, Occurrence[]>()
+    const multiDay: { item: MultiDayItem; occurrence: Occurrence }[] = []
     for (const occ of occurrences) {
-      for (const key of occurrenceDateKeys(occ)) {
-        const list = map.get(key)
+      const keys = occurrenceDateKeys(occ)
+      for (const key of keys) {
+        const list = byDate.get(key)
         if (list === undefined) {
-          map.set(key, [occ])
+          byDate.set(key, [occ])
         } else {
           list.push(occ)
         }
       }
+      const startKey = keys[0]
+      const endKey = keys[keys.length - 1]
+      if (startKey === undefined || endKey === undefined) {
+        continue
+      }
+      if (keys.length === 1) {
+        const list = singleByDate.get(startKey)
+        if (list === undefined) {
+          singleByDate.set(startKey, [occ])
+        } else {
+          list.push(occ)
+        }
+      } else {
+        multiDay.push({
+          item: { key: `${occ.eventId}-${occ.originalStartAt.getTime()}`, startKey, endKey },
+          occurrence: occ,
+        })
+      }
     }
-    return map
+    return { byDate, singleByDate, multiDay }
   }, [occurrences])
 
   const navigate = (direction: -1 | 1) => {
@@ -121,6 +147,8 @@ export function useCalendar() {
     todayKey,
     grid,
     byDate,
+    singleByDate,
+    multiDay,
     isLoading: eventsQuery.isLoading,
     filterMemberIds,
     toggleFilterMember: (id: string) =>
