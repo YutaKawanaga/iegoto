@@ -87,6 +87,8 @@ model Member {
   color         String
   /// アイコン (絵文字)。null = 未設定
   icon          String?
+  /// アイコン画像 (data URL, クライアントで96px程度に縮小済み)。null = 未設定。icon より優先して表示
+  avatar        String?
   sortOrder     Int       @map("sort_order")
   deletedAt     DateTime? @map("deleted_at") @db.Timestamptz()
   createdAt     DateTime  @default(now()) @map("created_at") @db.Timestamptz()

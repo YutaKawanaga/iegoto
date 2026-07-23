@@ -111,7 +111,12 @@ export function useSettings(family: FamilyInfo) {
     isAddingMember: addMember.isPending,
     updateMemberProfile: (
       memberId: string,
-      changes: { displayName: string; icon: string | null; color: MemberColor },
+      changes: {
+        displayName: string
+        icon: string | null
+        avatar: string | null
+        color: MemberColor
+      },
     ) => updateMember.mutate({ memberId, ...changes }),
     isUpdatingMember: updateMember.isPending,
     renameFamily: (name: string) => renameFamilyMutation.mutate({ name }),

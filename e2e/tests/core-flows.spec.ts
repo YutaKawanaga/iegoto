@@ -65,15 +65,19 @@ test.describe
       await login(page)
       await page.goto('/settings')
 
-      // メンバー編集: 名前 + アイコン
+      // メンバー編集: 名前 + 絵文字アイコン + アイコン写真のアップロード
       await page.getByRole('button', { name: '長男を編集' }).click()
       const dialog = page.getByRole('dialog')
       await dialog.getByLabel('名前').fill('たろう')
       await dialog.getByRole('button', { name: 'アイコン 👦' }).click()
+      await dialog.getByLabel('アイコン写真を選ぶ').setInputFiles('fixtures/avatar.png')
+      // クライアント縮小後のプレビュー (data URL の img) が出る
+      await expect(dialog.locator('img[src^="data:image/jpeg"]')).toBeVisible()
       await dialog.getByRole('button', { name: '保存' }).click()
       await expect(page.getByText('メンバーを更新しました')).toBeVisible()
       await expect(page.getByText('たろう', { exact: true })).toBeVisible()
-      await expect(page.locator('main').getByText('👦')).toBeVisible()
+      // 一覧のアバターが画像表示になる
+      await expect(page.locator('main img[src^="data:image/jpeg"]').first()).toBeVisible()
 
       // 家族名の変更
       await page.getByRole('button', { name: '家族名を変更' }).click()

@@ -3,9 +3,9 @@ import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Input } from '@/components/ui/input'
+import { MemberAvatar } from '@/components/ui/member-avatar'
 import type { FamilyInfo, MemberInfo } from '@/hooks/use-me'
 import { usePushNotifications } from '@/hooks/use-push-notifications'
-import { MEMBER_BG } from '@/lib/member-colors'
 import { cn } from '@/lib/utils'
 import { MemberEditDialog } from './member-edit-dialog'
 import { useSettings } from './use-settings'
@@ -108,7 +108,6 @@ export function SettingsContainer({ family }: { family: FamilyInfo }) {
               value={editingFamilyName}
               onChange={(e) => setEditingFamilyName(e.target.value)}
               maxLength={50}
-              // biome-ignore lint/a11y/noAutofocus: 編集開始の明示操作直後のフォーカス移動
               autoFocus
             />
             <Button
@@ -140,15 +139,10 @@ export function SettingsContainer({ family }: { family: FamilyInfo }) {
                   aria-label={`${m.displayName}を編集`}
                   onClick={() => setEditingMember(m)}
                 >
-                  <span
-                    className={cn(
-                      'flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold text-white',
-                      MEMBER_BG[m.color],
-                      m.icon !== null && 'text-base',
-                    )}
-                  >
-                    {m.icon ?? m.displayName.slice(0, 1)}
-                  </span>
+                  <MemberAvatar
+                    member={m}
+                    className={cn('h-8 w-8 text-xs', m.icon !== null && 'text-base')}
+                  />
                   <div className="flex-1">
                     <p className="text-sm font-medium">
                       {m.displayName}

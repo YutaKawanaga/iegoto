@@ -1,10 +1,14 @@
 import type { MemberColor } from '@iegoto/domain'
-import { useState } from 'react'
+import { ImagePlus } from 'lucide-react'
+import { useRef, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { MemberAvatar } from '@/components/ui/member-avatar'
+import { useAppToast } from '@/hooks/use-app-toast'
 import type { MemberInfo } from '@/hooks/use-me'
+import { resizeImageToAvatar } from '@/lib/image'
 import { MEMBER_BG } from '@/lib/member-colors'
 import { cn } from '@/lib/utils'
 
@@ -39,17 +43,32 @@ type Props = {
   onSave: (changes: {
     displayName: string
     icon: string | null
+    avatar: string | null
     color: MemberInfo['color']
   }) => void
   onClose: () => void
   isPending: boolean
 }
 
-/** メンバー編集ダイアログ (F-01): 名前・アイコン・カラーの変更 */
+/** メンバー編集ダイアログ (F-01): 名前・アイコン (写真 or 絵文字)・カラーの変更 */
 export function MemberEditDialog({ member, onSave, onClose, isPending }: Props) {
+  const toast = useAppToast()
+  const fileInputRef = useRef<HTMLInputElement>(null)
   const [name, setName] = useState(member.displayName)
   const [icon, setIcon] = useState<string | null>(member.icon)
+  const [avatar, setAvatar] = useState<string | null>(member.avatar)
   const [color, setColor] = useState(member.color)
+
+  const pickPhoto = async (file: File | undefined) => {
+    if (file === undefined) {
+      return
+    }
+    try {
+      setAvatar(await resizeImageToAvatar(file))
+    } catch {
+      toast.error('画像を読み込めませんでした')
+    }
+  }
 
   return (
     <Dialog open onOpenChange={(open) => !open && onClose()}>
@@ -59,7 +78,7 @@ export function MemberEditDialog({ member, onSave, onClose, isPending }: Props) 
           <div className="flex justify-end">
             <Button
               disabled={name.trim().length === 0 || isPending}
-              onClick={() => onSave({ displayName: name, icon, color })}
+              onClick={() => onSave({ displayName: name, icon, avatar, color })}
             >
               保存
             </Button>
@@ -78,7 +97,39 @@ export function MemberEditDialog({ member, onSave, onClose, isPending }: Props) 
           </div>
 
           <div className="space-y-1.5">
-            <Label>アイコン</Label>
+            <Label>アイコン写真</Label>
+            <div className="flex items-center gap-3">
+              <MemberAvatar
+                member={{ displayName: name, color, icon, avatar }}
+                className="h-14 w-14 text-xl"
+              />
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                aria-label="アイコン写真を選ぶ"
+                onChange={(e) => pickPhoto(e.target.files?.[0])}
+              />
+              <Button variant="outline" size="sm" onClick={() => fileInputRef.current?.click()}>
+                <ImagePlus className="h-4 w-4" />
+                写真を選ぶ
+              </Button>
+              {avatar !== null && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="text-muted-foreground"
+                  onClick={() => setAvatar(null)}
+                >
+                  写真を削除
+                </Button>
+              )}
+            </div>
+          </div>
+
+          <div className="space-y-1.5">
+            <Label>絵文字アイコン (写真がないときに表示)</Label>
             <div className="flex flex-wrap gap-1.5">
               <button
                 type="button"

@@ -85,6 +85,7 @@ export const appRouter = router({
           displayName: z.string().min(1).max(30).optional(),
           color: memberColorSchema.optional(),
           icon: z.string().max(16).nullable().optional(),
+          avatar: z.string().max(60_000).nullable().optional(),
         }),
       )
       .mutation(({ ctx, input }) => updateMember(ctx, input)),

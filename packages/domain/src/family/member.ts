@@ -26,6 +26,8 @@ export type Member = {
   color: MemberColor
   /** アイコン (絵文字)。null = 未設定 (表示は名前の頭文字で代替) */
   icon: string | null
+  /** アイコン画像 (data URL)。null = 未設定。表示は avatar > icon > 頭文字 の優先順 */
+  avatar: string | null
   sortOrder: number
   deletedAt: Date | null
 }
@@ -36,6 +38,7 @@ export function createMember(input: {
   displayName: string
   color: MemberColor
   icon?: string | null
+  avatar?: string | null
   sortOrder: number
 }): Member {
   return {
@@ -45,6 +48,7 @@ export function createMember(input: {
     displayName: validateDisplayName(input.displayName),
     color: input.color,
     icon: validateMemberIcon(input.icon ?? null),
+    avatar: validateMemberAvatar(input.avatar ?? null),
     sortOrder: input.sortOrder,
     deletedAt: null,
   }
@@ -56,6 +60,23 @@ export function validateDisplayName(name: string): string {
     throw new DomainError('INVALID_MEMBER_NAME', '名前は1〜30文字で入力してください')
   }
   return trimmed
+}
+
+/**
+ * アイコン画像。クライアントで縮小済みの data URL のみ受け付ける。
+ * 外部ストレージなし (0円構成) のため DB に直接保存する。96px JPEG で概ね3〜6KB
+ */
+export function validateMemberAvatar(avatar: string | null): string | null {
+  if (avatar === null) {
+    return null
+  }
+  if (!/^data:image\/(jpeg|png|webp);base64,/.test(avatar)) {
+    throw new DomainError('INVALID_MEMBER_AVATAR', 'アイコン画像の形式が不正です')
+  }
+  if (avatar.length > 60_000) {
+    throw new DomainError('INVALID_MEMBER_AVATAR', 'アイコン画像が大きすぎます')
+  }
+  return avatar
 }
 
 /** 絵文字1つ想定。ZWJ結合絵文字 (家族絵文字等) があるため UTF-16 長で最大16まで許容 */
