@@ -20,6 +20,9 @@ test.describe
       await page.fill('#my-name', 'パパ')
       await page.getByRole('button', { name: '家族をつくる' }).click()
       await page.waitForURL('/')
+      // 初期表示はカレンダー。今日ページはナビから開ける
+      await expect(page.getByRole('button', { name: '今日', exact: true })).toBeVisible()
+      await page.getByRole('link', { name: '今日' }).click()
       await expect(page.getByRole('heading', { name: '今日の予定' })).toBeVisible()
     })
 
@@ -33,7 +36,7 @@ test.describe
 
     test('カレンダーで予定を作成し、フィルタ選択中はデフォルト対象になる', async ({ page }) => {
       await login(page)
-      await page.goto('/calendar')
+      await page.goto('/')
       // 長男フィルタを選択してから作成 → モーダルで長男が初期選択
       await page.getByRole('button', { name: '長男' }).click()
       await page.click('button[aria-label="予定を作成"]')
@@ -53,7 +56,7 @@ test.describe
     test('予定編集モーダルはスクロールしても保存ボタンが見える', async ({ page }) => {
       await page.setViewportSize({ width: 390, height: 700 })
       await login(page)
-      await page.goto('/calendar')
+      await page.goto('/')
       await page.click('button[aria-label="予定を作成"]')
       const save = page.getByRole('button', { name: '保存' })
       await page.evaluate(() => {
@@ -93,10 +96,10 @@ test.describe
 
     test('選択状態はタブを切り替えても維持される', async ({ page }) => {
       await login(page)
-      await page.goto('/calendar')
+      await page.goto('/')
       await page.getByRole('button', { name: 'パパ' }).click()
       await page.goto('/shopping')
-      await page.goto('/calendar')
+      await page.goto('/')
       await expect(page.getByRole('button', { name: 'パパ' })).toHaveClass(/border-primary/)
       await page.getByRole('button', { name: '全員' }).click()
     })

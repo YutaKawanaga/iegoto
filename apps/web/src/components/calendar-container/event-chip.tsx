@@ -30,27 +30,33 @@ export function EventChip({ occurrence, members, compact = false, onClick }: Pro
         onClick()
       }}
       className={cn(
-        'block w-full truncate rounded px-1 py-0.5 text-left text-[11px] leading-tight',
-        compact ? 'md:text-xs' : 'text-sm py-1.5 px-2 rounded-lg',
+        'block w-full rounded px-1 py-0.5 text-left text-[11px] leading-tight',
+        compact ? 'md:text-xs' : 'truncate text-sm py-1.5 px-2 rounded-lg',
         primary !== undefined ? MEMBER_BG_SOFT[primary] : 'bg-muted',
       )}
     >
-      <span className="mr-1 inline-flex -space-x-0.5 align-middle">
-        {colors.slice(0, 3).map((c, i) => (
-          <span
-            // biome-ignore lint/suspicious/noArrayIndexKey: 同色メンバーが並びうるため index を含める
-            key={`${c}-${i}`}
-            className={cn('inline-block h-2 w-2 rounded-full ring-1 ring-card', MEMBER_BG[c])}
-          />
-        ))}
-        {colors.length === 0 && (
-          <span className="inline-block h-2 w-2 rounded-full bg-muted-foreground/40" />
-        )}
-      </span>
+      {/* compact (月セル): 幅が狭いためドットは複数メンバー時のみ。単独は背景色で表現し、
+          タイトルは省略せず2行まで折り返す (iPhoneで数文字でも「…」になる問題の対策) */}
+      {(!compact || colors.length > 1) && (
+        <span className="mr-1 inline-flex -space-x-0.5 align-middle">
+          {colors.slice(0, 3).map((c, i) => (
+            <span
+              // biome-ignore lint/suspicious/noArrayIndexKey: 同色メンバーが並びうるため index を含める
+              key={`${c}-${i}`}
+              className={cn('inline-block h-2 w-2 rounded-full ring-1 ring-card', MEMBER_BG[c])}
+            />
+          ))}
+          {colors.length === 0 && (
+            <span className="inline-block h-2 w-2 rounded-full bg-muted-foreground/40" />
+          )}
+        </span>
+      )}
       {occurrence.time.kind === 'timed' && !compact && (
         <span className="mr-1 text-muted-foreground">{formatTime(occurrence.time.startAt)}</span>
       )}
-      <span className="align-middle">{occurrence.title}</span>
+      <span className={cn('align-middle', compact && 'line-clamp-2 break-all')}>
+        {occurrence.title}
+      </span>
     </button>
   )
 }

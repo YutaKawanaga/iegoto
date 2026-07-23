@@ -50,7 +50,7 @@ test.describe
 
     test('毎週の繰り返し予定を作成すると月表示に複数回出る', async ({ page }) => {
       await login(page, ownerEmail)
-      await page.goto('/calendar')
+      await page.goto('/')
       await page.click('button[aria-label="予定を作成"]')
       const dialog = page.getByRole('dialog')
       await dialog.getByPlaceholder('タイトル').fill('毎週ピアノ')
@@ -66,7 +66,7 @@ test.describe
 
     test('「この予定のみ」削除でその回だけ消える', async ({ page }) => {
       await login(page, ownerEmail)
-      await page.goto('/calendar')
+      await page.goto('/')
       const chips = page.locator('main').getByText('毎週ピアノ')
       await expect(chips.first()).toBeVisible()
       const before = await chips.count()
@@ -88,7 +88,7 @@ test.describe
 
     test('単発予定のタイトルを編集できる', async ({ page }) => {
       await login(page, ownerEmail)
-      await page.goto('/calendar')
+      await page.goto('/')
       // 単発予定を作成
       await page.click('button[aria-label="予定を作成"]')
       let dialog = page.getByRole('dialog')

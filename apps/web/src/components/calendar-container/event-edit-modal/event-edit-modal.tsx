@@ -179,9 +179,6 @@ export function EventEditModal({ target, family, onClose }: Props) {
                   </option>
                 ))}
               </Select>
-              <p className="text-xs text-muted-foreground">
-                ※通知の配信はフェーズ4で有効になります
-              </p>
             </div>
           )}
 
@@ -191,15 +188,6 @@ export function EventEditModal({ target, family, onClose }: Props) {
               value={f.recurrence}
               onChange={f.setRecurrence}
               baseDate={f.baseDate}
-            />
-          </div>
-
-          <div className="space-y-1.5">
-            <Label>場所</Label>
-            <Input
-              value={f.location}
-              onChange={(e) => f.setLocation(e.target.value)}
-              maxLength={200}
             />
           </div>
 
