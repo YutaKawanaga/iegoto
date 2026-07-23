@@ -6,6 +6,7 @@ import type { FamilyInfo } from '@/hooks/use-me'
 import { MEMBER_BG, MEMBER_BG_SOFT } from '@/lib/member-colors'
 import { cn } from '@/lib/utils'
 import type { GridDay } from '@/utils/calendar-grid'
+import { holidayName } from '@/utils/holidays'
 import { laneCount, layoutWeekSegments } from '@/utils/multi-day-layout'
 import { WEEKDAY_LABELS } from '@/utils/recurrence'
 import { DaySheet } from './day-sheet'
@@ -146,6 +147,7 @@ function MonthView({ c, family }: ViewProps) {
                 (s) => s.startIdx <= dayIdx && dayIdx <= s.endIdx,
               ).length
               const hidden = Math.max(0, singles.length - maxSingles) + hiddenMulti
+              const holiday = holidayName(day.dateKey)
               return (
                 <button
                   key={day.dateKey}
@@ -157,15 +159,24 @@ function MonthView({ c, family }: ViewProps) {
                     !day.inMonth && 'bg-muted/30 text-muted-foreground',
                   )}
                 >
-                  <span
-                    className={cn(
-                      'mb-0.5 inline-flex h-5 w-5 items-center justify-center rounded-full text-xs',
-                      day.weekday === 0 && day.inMonth && 'text-red-500',
-                      day.weekday === 6 && day.inMonth && 'text-blue-500',
-                      day.dateKey === c.todayKey && 'bg-primary font-bold text-primary-foreground',
+                  {/* 高さ h-5 固定: 連続バーの上端オフセット (LANE_TOP) の前提 */}
+                  <span className="mb-0.5 flex h-5 items-center gap-0.5">
+                    <span
+                      className={cn(
+                        'inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-xs',
+                        (day.weekday === 0 || holiday !== null) && day.inMonth && 'text-red-500',
+                        day.weekday === 6 && day.inMonth && 'text-blue-500',
+                        day.dateKey === c.todayKey &&
+                          'bg-primary font-bold text-primary-foreground',
+                      )}
+                    >
+                      {day.day}
+                    </span>
+                    {holiday !== null && (
+                      <span className="min-w-0 flex-1 truncate text-[9px] text-red-500">
+                        {holiday}
+                      </span>
                     )}
-                  >
-                    {day.day}
                   </span>
                   {/* 連続バー (絶対配置) が重なる分の高さを空ける */}
                   {lanes > 0 && <div style={{ height: lanes * LANE_PITCH }} />}
@@ -233,6 +244,7 @@ function WeekView({ c, family }: ViewProps) {
     <div className="space-y-2">
       {c.grid.map((day) => {
         const events = c.byDate.get(day.dateKey) ?? []
+        const holiday = holidayName(day.dateKey)
         return (
           <div key={day.dateKey} className="rounded-xl border border-border bg-card p-3">
             <div className="mb-2 flex items-center justify-between">
@@ -240,10 +252,11 @@ function WeekView({ c, family }: ViewProps) {
                 className={cn(
                   'text-sm font-medium',
                   day.dateKey === c.todayKey && 'text-primary',
-                  day.weekday === 0 && 'text-destructive',
+                  (day.weekday === 0 || holiday !== null) && 'text-destructive',
                 )}
               >
                 {Number(day.dateKey.slice(8, 10))}日 ({WEEKDAY_LABELS[day.weekday]})
+                {holiday !== null && <span className="ml-1.5 text-xs">{holiday}</span>}
               </p>
               <Button
                 variant="ghost"
