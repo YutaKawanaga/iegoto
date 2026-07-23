@@ -1,10 +1,9 @@
 import { ListChecks } from 'lucide-react'
 import { Link } from 'react-router-dom'
+import { MemberAvatar } from '@/components/ui/member-avatar'
 import { Spinner } from '@/components/ui/spinner'
 import type { FamilyInfo, MemberInfo } from '@/hooks/use-me'
 import type { Occurrence } from '@/lib/api-types'
-import { MEMBER_BG } from '@/lib/member-colors'
-import { cn } from '@/lib/utils'
 import { formatEventTimeLabel } from '@/utils/date-format'
 import { useToday } from './use-today'
 
@@ -93,16 +92,11 @@ function EventList({ events, members }: { events: Occurrence[]; members: MemberI
             {occ.targetMemberIds.slice(0, 3).map((id) => {
               const m = memberById.get(id)
               return m === undefined ? null : (
-                <span
+                <MemberAvatar
                   key={id}
-                  title={m.displayName}
-                  className={cn(
-                    'flex h-7 w-7 items-center justify-center rounded-full text-[10px] font-bold text-white ring-2 ring-card',
-                    MEMBER_BG[m.color],
-                  )}
-                >
-                  {m.icon ?? m.displayName.slice(0, 1)}
-                </span>
+                  member={m}
+                  className="h-7 w-7 text-[10px] ring-2 ring-card"
+                />
               )
             })}
           </div>

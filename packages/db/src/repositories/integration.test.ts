@@ -110,6 +110,17 @@ describe('MemberRepository', () => {
     expect(cleared?.icon).toBeNull()
   })
 
+  it('update でアイコン画像 (data URL) を保存・削除できる', async () => {
+    const { family, kid } = await seedFamily()
+    const repo = new MemberRepository(db)
+    const avatar = 'data:image/jpeg;base64,/9j/4AAQSkZJRg=='
+    await repo.update(family.id, kid.id, { avatar })
+    expect((await repo.find(family.id, kid.id))?.avatar).toBe(avatar)
+
+    await repo.update(family.id, kid.id, { avatar: null })
+    expect((await repo.find(family.id, kid.id))?.avatar).toBeNull()
+  })
+
   it('テナント境界: 他家族の familyId では softDelete できない', async () => {
     const a = await seedFamily()
     const b = await seedFamily()

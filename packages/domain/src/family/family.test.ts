@@ -3,7 +3,13 @@ import { DomainError } from '../shared/errors.js'
 import { newId } from '../shared/id.js'
 import { createFamily } from './family.js'
 import { invitationExpiry, isInvitationUsable } from './invitation.js'
-import { createMember, MEMBER_COLORS, validateDisplayName, validateMemberIcon } from './member.js'
+import {
+  createMember,
+  MEMBER_COLORS,
+  validateDisplayName,
+  validateMemberAvatar,
+  validateMemberIcon,
+} from './member.js'
 
 describe('createFamily', () => {
   it('名前を trim して家族を作る', () => {
@@ -32,6 +38,16 @@ describe('createMember / validateDisplayName', () => {
     expect(validateDisplayName(' パパ ')).toBe('パパ')
     expect(() => validateDisplayName('  ')).toThrow(DomainError)
     expect(() => validateDisplayName('あ'.repeat(31))).toThrow(DomainError)
+  })
+
+  it('アイコン画像は data URL のみ許容し、サイズ上限を超えると拒否する', () => {
+    expect(validateMemberAvatar(null)).toBeNull()
+    const ok = 'data:image/jpeg;base64,/9j/AAAA'
+    expect(validateMemberAvatar(ok)).toBe(ok)
+    expect(() => validateMemberAvatar('https://example.com/a.jpg')).toThrow(DomainError)
+    expect(() => validateMemberAvatar(`data:image/jpeg;base64,${'A'.repeat(60_001)}`)).toThrow(
+      DomainError,
+    )
   })
 
   it('アイコンは省略可・空文字は null 扱い・ZWJ結合絵文字も許容する', () => {

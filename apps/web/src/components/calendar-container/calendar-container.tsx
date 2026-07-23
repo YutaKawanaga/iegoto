@@ -67,7 +67,9 @@ export function CalendarContainer({ family }: { family: FamilyInfo }) {
               c.filterMemberIds.includes(m.id) && 'border-primary bg-primary/10 font-medium',
             )}
           >
-            {m.icon !== null ? (
+            {m.avatar !== null ? (
+              <img src={m.avatar} alt="" className="h-4 w-4 rounded-full object-cover" />
+            ) : m.icon !== null ? (
               <span className="text-sm leading-none">{m.icon}</span>
             ) : (
               <span className={cn('h-2 w-2 rounded-full', MEMBER_BG[m.color])} />

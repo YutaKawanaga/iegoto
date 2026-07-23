@@ -33,6 +33,7 @@ export async function getMe(ctx: AuthedContext) {
               displayName: m.displayName,
               color: m.color,
               icon: m.icon,
+              avatar: m.avatar,
               canLogin: m.userAccountId !== null,
               isDeleted: m.deletedAt !== null,
             })),
