@@ -48,7 +48,6 @@ export function useEventForm(target: EditTarget, family: FamilyInfo, onClose: ()
 
   const [title, setTitle] = useState(editing?.title ?? '')
   const [memo, setMemo] = useState(editing?.memo ?? '')
-  const [location, setLocation] = useState(editing?.location ?? '')
   const [isAllDay, setIsAllDay] = useState(editing !== null && editing.time.kind === 'allDay')
   const [dateKey, setDateKey] = useState(initialDateKey)
   const [endDateKey, setEndDateKey] = useState(
@@ -101,7 +100,6 @@ export function useEventForm(target: EditTarget, family: FamilyInfo, onClose: ()
 
   const applySuggestion = (s: SuggestItem) => {
     setTitle(s.title)
-    setLocation(s.location ?? '')
     setIsAllDay(s.isAllDay)
     setTargetMemberIds(s.targetMemberIds)
     if (!s.isAllDay && s.startTimeLocal !== null && s.durationMinutes !== null) {
@@ -165,7 +163,6 @@ export function useEventForm(target: EditTarget, family: FamilyInfo, onClose: ()
     createMutation.mutate({
       title,
       memo: memo.trim() === '' ? null : memo,
-      location: location.trim() === '' ? null : location,
       time: buildTime(),
       rrule,
       targetMemberIds,
@@ -180,10 +177,10 @@ export function useEventForm(target: EditTarget, family: FamilyInfo, onClose: ()
       scope,
       originalStartAt: editing.originalStartAt,
       occurrenceTime: editing.time,
+      // location は UI 廃止 (フィードバック)。changes から省略 = 既存値を維持
       changes: {
         title,
         memo: memo.trim() === '' ? null : memo,
-        location: location.trim() === '' ? null : location,
         time: buildTime(),
         targetMemberIds,
         reminderMinutesBefore: reminderMinutes,
@@ -234,8 +231,6 @@ export function useEventForm(target: EditTarget, family: FamilyInfo, onClose: ()
     setTitle,
     memo,
     setMemo,
-    location,
-    setLocation,
     isAllDay,
     setIsAllDay,
     dateKey,

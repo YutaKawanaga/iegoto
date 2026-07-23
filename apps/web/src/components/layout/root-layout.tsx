@@ -4,8 +4,8 @@ import { AppLogo } from '@/components/ui/app-logo'
 import { cn } from '@/lib/utils'
 
 const NAV_ITEMS = [
-  { to: '/', label: '今日', icon: Home },
-  { to: '/calendar', label: 'カレンダー', icon: Calendar },
+  { to: '/', label: 'カレンダー', icon: Calendar },
+  { to: '/today', label: '今日', icon: Home },
   { to: '/shopping', label: '買い物', icon: ListChecks },
   { to: '/settings', label: '設定', icon: Settings },
 ] as const

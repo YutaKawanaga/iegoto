@@ -20,11 +20,12 @@ export const router = createBrowserRouter([
       {
         element: <RootLayout />,
         children: [
-          { path: '/', element: <TodayPage /> },
-          { path: '/calendar', element: <CalendarPage /> },
+          // 初期表示はカレンダー (フィードバック: TimeTree 同様、開いてすぐ月の予定を見たい)
+          { path: '/', element: <CalendarPage /> },
+          { path: '/today', element: <TodayPage /> },
           { path: '/shopping', element: <ShoppingPage /> },
           { path: '/settings', element: <SettingsPage /> },
-          // 廃止したパス (旧 /assignments 等) や不明なパスはホームへ
+          // 旧 /calendar・廃止したパス (旧 /assignments 等)・不明なパスはホーム (カレンダー) へ
           { path: '*', element: <Navigate to="/" replace /> },
         ],
       },
