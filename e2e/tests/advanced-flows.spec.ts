@@ -14,6 +14,14 @@ async function login(page: Page, email: string) {
   await page.waitForLoadState('networkidle')
 }
 
+/** 今日の日セル → 日別ビュー → ヘッダのプラスで作成モーダルを開く (FAB廃止後の導線) */
+async function openCreateModal(page: Page) {
+  const jstNow = new Date(Date.now() + 9 * 3600_000)
+  const label = `${jstNow.getUTCFullYear()}年${jstNow.getUTCMonth() + 1}月${jstNow.getUTCDate()}日`
+  await page.click(`button[aria-label="${label}"]`)
+  await page.getByRole('button', { name: '予定を作成' }).click()
+}
+
 test.describe
   .serial('招待 → 繰り返し予定 → 編集・削除 → 買い物', () => {
     test('オーナーが家族を作成する', async ({ page }) => {
@@ -51,7 +59,7 @@ test.describe
     test('毎週の繰り返し予定を作成すると月表示に複数回出る', async ({ page }) => {
       await login(page, ownerEmail)
       await page.goto('/')
-      await page.click('button[aria-label="予定を作成"]')
+      await openCreateModal(page)
       const dialog = page.getByRole('dialog')
       await dialog.getByPlaceholder('タイトル').fill('毎週ピアノ')
       await dialog.locator('select:has(option[value="weekly"])').selectOption('weekly')
@@ -72,8 +80,10 @@ test.describe
       const before = await chips.count()
       expect(before).toBeGreaterThanOrEqual(2)
 
+      // 月セルのチップは非インタラクティブになった: セルタップ → 日別ビュー → 予定タップで編集へ
       await chips.first().click()
       const dialog = page.getByRole('dialog')
+      await dialog.getByText('毎週ピアノ').first().click()
       await dialog.getByRole('button', { name: '削除' }).click()
       // 繰り返し予定なのでスコープ3択が出る → この予定のみ
       await expect(dialog.getByText('繰り返し予定を削除する範囲')).toBeVisible()
@@ -90,15 +100,16 @@ test.describe
       await login(page, ownerEmail)
       await page.goto('/')
       // 単発予定を作成
-      await page.click('button[aria-label="予定を作成"]')
+      await openCreateModal(page)
       let dialog = page.getByRole('dialog')
       await dialog.getByPlaceholder('タイトル').fill('歯医者')
       await dialog.getByRole('button', { name: '保存' }).click()
       await expect(page.getByText('予定を作成しました')).toBeVisible()
 
-      // 編集
+      // 編集: セルタップ → 日別ビュー → 予定タップ
       await page.locator('main').getByText('歯医者').first().click()
       dialog = page.getByRole('dialog')
+      await dialog.getByText('歯医者').first().click()
       await dialog.getByPlaceholder('タイトル').fill('歯医者(変更後)')
       await dialog.getByRole('button', { name: '保存' }).click()
       await expect(page.getByText('予定を更新しました')).toBeVisible()

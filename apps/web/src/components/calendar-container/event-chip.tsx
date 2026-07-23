@@ -9,7 +9,8 @@ type Props = {
   occurrence: Occurrence
   members: MemberInfo[]
   compact?: boolean
-  onClick: () => void
+  /** 未指定 = 非インタラクティブ表示 (月セル内。タップは日セル側の日別ビューに委ねる) */
+  onClick?: () => void
 }
 
 /** 予定チップ (F-02: メンバーカラー色分け。対象複数時は色ドットを並べる) */
@@ -20,21 +21,14 @@ export function EventChip({ occurrence, members, compact = false, onClick }: Pro
     .filter((c): c is MemberColor => c !== undefined)
   const primary = colors[0]
 
-  return (
-    <button
-      type="button"
-      onClick={(e) => {
-        // 月表示では日セル自体が「予定作成」ボタンのため、バブリングすると
-        // 編集ではなく作成モーダルが開いてしまう (E2Eで検出したバグの修正)
-        e.stopPropagation()
-        onClick()
-      }}
-      className={cn(
-        'block w-full rounded px-1 py-0.5 text-left text-[11px] leading-tight',
-        compact ? 'md:text-xs' : 'truncate text-sm py-1.5 px-2 rounded-lg',
-        primary !== undefined ? MEMBER_BG_SOFT[primary] : 'bg-muted',
-      )}
-    >
+  const className = cn(
+    'block w-full rounded px-1 py-0.5 text-left text-[11px] leading-tight',
+    compact ? 'md:text-xs' : 'truncate text-sm py-1.5 px-2 rounded-lg',
+    primary !== undefined ? MEMBER_BG_SOFT[primary] : 'bg-muted',
+  )
+
+  const inner = (
+    <>
       {/* compact (月セル): 幅が狭いためドットは複数メンバー時のみ。単独は背景色で表現し、
           タイトルは省略せず2行まで折り返す (iPhoneで数文字でも「…」になる問題の対策) */}
       {(!compact || colors.length > 1) && (
@@ -57,6 +51,23 @@ export function EventChip({ occurrence, members, compact = false, onClick }: Pro
       <span className={cn('align-middle', compact && 'line-clamp-2 break-all')}>
         {occurrence.title}
       </span>
+    </>
+  )
+
+  if (onClick === undefined) {
+    return <div className={className}>{inner}</div>
+  }
+  return (
+    <button
+      type="button"
+      onClick={(e) => {
+        // 日セル側のクリック (日別ビューを開く) にバブリングさせない
+        e.stopPropagation()
+        onClick()
+      }}
+      className={className}
+    >
+      {inner}
     </button>
   )
 }
