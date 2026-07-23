@@ -3,14 +3,14 @@ import { Button } from '@/components/ui/button'
 import { Spinner } from '@/components/ui/spinner'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import type { FamilyInfo } from '@/hooks/use-me'
-import { MEMBER_BG, MEMBER_BG_SOFT } from '@/lib/member-colors'
+import { MEMBER_BG, memberFill } from '@/lib/member-colors'
 import { cn } from '@/lib/utils'
 import type { GridDay } from '@/utils/calendar-grid'
 import { holidayName } from '@/utils/holidays'
 import { laneCount, layoutWeekSegments } from '@/utils/multi-day-layout'
 import { WEEKDAY_LABELS } from '@/utils/recurrence'
 import { DaySheet } from './day-sheet'
-import { EventChip } from './event-chip'
+import { EventChip, occurrenceColors } from './event-chip'
 import { EventEditModal } from './event-edit-modal/event-edit-modal'
 import { useCalendar } from './use-calendar'
 
@@ -117,7 +117,6 @@ function MonthView({ c, family }: ViewProps) {
     weeks.push(c.grid.slice(i, i + 7))
   }
   const occByKey = new Map(c.multiDay.map((m) => [m.item.key, m.occurrence]))
-  const memberById = new Map(family.members.map((m) => [m.id, m]))
 
   return (
     <div className="overflow-hidden rounded-xl border border-border bg-card shadow-sm">
@@ -155,12 +154,14 @@ function MonthView({ c, family }: ViewProps) {
                   aria-label={`${Number(day.dateKey.slice(0, 4))}年${Number(day.dateKey.slice(5, 7))}月${day.day}日`}
                   onClick={() => c.openDay(day.dateKey)}
                   className={cn(
-                    'min-h-20 min-w-0 border-b border-r border-border p-1 text-left align-top transition-colors last:border-r-0 hover:bg-muted/40 md:min-h-28',
+                    // flex-col で上詰め: button 既定の縦中央寄せだと空セルの日付が下がり、
+                    // 固定オフセットの連続バーと重なる
+                    'flex min-h-20 min-w-0 flex-col border-b border-r border-border p-1 text-left transition-colors last:border-r-0 hover:bg-muted/40 md:min-h-28',
                     !day.inMonth && 'bg-muted/30 text-muted-foreground',
                   )}
                 >
-                  {/* 高さ h-5 固定: 連続バーの上端オフセット (LANE_TOP) の前提 */}
-                  <span className="mb-0.5 flex h-5 items-center gap-0.5">
+                  {/* 日付番号は中央上 (TimeTree風)。高さ h-5 固定: 連続バーの上端オフセット (LANE_TOP) の前提 */}
+                  <span className="mb-0.5 flex h-5 items-center justify-center">
                     <span
                       className={cn(
                         'inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-xs',
@@ -172,15 +173,14 @@ function MonthView({ c, family }: ViewProps) {
                     >
                       {day.day}
                     </span>
-                    {holiday !== null && (
-                      <span className="min-w-0 flex-1 truncate text-[9px] text-red-500">
-                        {holiday}
-                      </span>
-                    )}
                   </span>
                   {/* 連続バー (絶対配置) が重なる分の高さを空ける */}
                   {lanes > 0 && <div style={{ height: lanes * LANE_PITCH }} />}
                   <div className="space-y-0.5">
+                    {/* 祝日名は日付と重ならないよう、セル内容の先頭行に赤テキストで表示 */}
+                    {holiday !== null && (
+                      <p className="truncate px-1 text-[9px] font-medium text-red-500">{holiday}</p>
+                    )}
                     {/* onClick なし = セル全体のタップで日別ビューを開く (小さいチップの誤タップ防止) */}
                     {singles.slice(0, maxSingles).map((occ) => (
                       <EventChip
@@ -197,7 +197,8 @@ function MonthView({ c, family }: ViewProps) {
                 </button>
               )
             })}
-            {/* 複数日予定の連続バー: 週の行を横断して1本で描画する */}
+            {/* 複数日予定の連続バー: 週の行を横断して1本で描画する。
+                タップは下の日セル (日別ビュー) に透過させる (スマホで細かい操作をさせない方針) */}
             {segments
               .filter((s) => s.lane < MAX_LANES)
               .map((seg) => {
@@ -205,19 +206,15 @@ function MonthView({ c, family }: ViewProps) {
                 if (occ === undefined) {
                   return null
                 }
-                const primary = occ.targetMemberIds
-                  .map((id) => memberById.get(id)?.color)
-                  .find((color) => color !== undefined)
+                const fill = memberFill(occurrenceColors(occ, family.members))
                 const insetL = seg.continuesLeft ? 0 : 2
                 const insetR = seg.continuesRight ? 0 : 2
                 return (
-                  <button
+                  <div
                     key={seg.key}
-                    type="button"
-                    onClick={() => c.openEdit(occ)}
                     className={cn(
-                      'absolute z-10 flex items-center overflow-hidden px-1.5 text-left text-[10px] leading-none',
-                      primary !== undefined ? MEMBER_BG_SOFT[primary] : 'bg-muted',
+                      'pointer-events-none absolute z-10 flex items-center overflow-hidden px-1.5 text-left text-[10px] leading-none',
+                      fill === undefined ? 'bg-muted' : 'font-medium text-white',
                       !seg.continuesLeft && 'rounded-l',
                       !seg.continuesRight && 'rounded-r',
                     )}
@@ -226,10 +223,11 @@ function MonthView({ c, family }: ViewProps) {
                       height: LANE_PITCH - 2,
                       left: `calc(${(seg.startIdx / 7) * 100}% + ${insetL}px)`,
                       width: `calc(${((seg.endIdx - seg.startIdx + 1) / 7) * 100}% - ${insetL + insetR}px)`,
+                      ...(fill === undefined ? {} : { background: fill }),
                     }}
                   >
                     <span className="truncate">{occ.title}</span>
-                  </button>
+                  </div>
                 )
               })}
           </div>

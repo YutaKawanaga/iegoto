@@ -137,8 +137,12 @@ test.describe
       const count = await bars.count()
       expect(count).toBeLessThanOrEqual(2)
 
-      // バーのタップで編集モーダルが開く
-      await bars.first().click()
+      // バー自体はタップ不可 (日セルに透過)。日セル → 日別ビュー → 予定タップで編集へ
+      const jstToday = new Date(Date.now() + 9 * 3600_000)
+      const label = `${jstToday.getUTCFullYear()}年${jstToday.getUTCMonth() + 1}月${jstToday.getUTCDate()}日`
+      await page.click(`button[aria-label="${label}"]`)
+      const daySheet = page.getByRole('dialog')
+      await daySheet.getByText('沖縄旅行').first().click()
       await expect(page.getByRole('dialog').getByPlaceholder('タイトル')).toHaveValue('沖縄旅行')
       await page.getByRole('button', { name: '閉じる' }).click()
     })

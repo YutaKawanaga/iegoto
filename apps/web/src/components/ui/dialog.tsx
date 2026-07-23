@@ -39,7 +39,11 @@ export function DialogContent({
           <DialogPrimitive.Title className="text-base font-semibold">{title}</DialogPrimitive.Title>
           <div className="flex items-center gap-1">
             {headerAction}
-            <DialogPrimitive.Close className="rounded-md p-1 hover:bg-muted" aria-label="閉じる">
+            {/* 当たり判定は headerAction (Button size=icon: h-10 w-10) と同じ大きさに揃える */}
+            <DialogPrimitive.Close
+              className="flex h-10 w-10 items-center justify-center rounded-md hover:bg-muted"
+              aria-label="閉じる"
+            >
               <X className="h-4 w-4" />
             </DialogPrimitive.Close>
           </div>
