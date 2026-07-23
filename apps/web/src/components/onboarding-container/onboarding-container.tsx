@@ -18,7 +18,7 @@ export function OnboardingContainer() {
           <Label htmlFor="family-name">家族の名前</Label>
           <Input
             id="family-name"
-            placeholder="例: 川永家"
+            placeholder="例: 山田家"
             value={o.familyName}
             onChange={(e) => o.setFamilyName(e.target.value)}
             maxLength={50}
