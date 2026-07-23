@@ -26,6 +26,33 @@ export const MEMBER_BG_SOFT: Record<MemberColor, string> = {
   indigo: 'bg-member-indigo/15',
 }
 
+/** CSS変数参照 (styles の --color-member-*)。グラデーション等の動的スタイル用 */
+export const MEMBER_CSS_VAR: Record<MemberColor, string> = {
+  coral: 'var(--color-member-coral)',
+  sky: 'var(--color-member-sky)',
+  leaf: 'var(--color-member-leaf)',
+  amber: 'var(--color-member-amber)',
+  plum: 'var(--color-member-plum)',
+  teal: 'var(--color-member-teal)',
+  rose: 'var(--color-member-rose)',
+  indigo: 'var(--color-member-indigo)',
+}
+
+/**
+ * 予定の塗り色 (F-02: 予定はメンバーカラーで表す)。
+ * 1人 = 単色 / 複数人 = メンバーカラーのグラデーション (最大3色)
+ */
+export function memberFill(colors: MemberColor[]): string | undefined {
+  const vars = colors.slice(0, 3).map((c) => MEMBER_CSS_VAR[c])
+  if (vars.length === 0) {
+    return undefined
+  }
+  if (vars.length === 1) {
+    return vars[0]
+  }
+  return `linear-gradient(90deg, ${vars.join(', ')})`
+}
+
 export const MEMBER_BORDER: Record<MemberColor, string> = {
   coral: 'border-member-coral',
   sky: 'border-member-sky',
