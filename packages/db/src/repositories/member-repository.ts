@@ -10,6 +10,7 @@ function fromRow(row: MemberRow): Member {
     userAccountId: row.userAccountId === null ? null : toId<'UserAccount'>(row.userAccountId),
     displayName: row.displayName,
     color: row.color as MemberColor,
+    icon: row.icon,
     sortOrder: row.sortOrder,
     deletedAt: row.deletedAt,
   }
@@ -53,6 +54,7 @@ export class MemberRepository {
         userAccountId: member.userAccountId,
         displayName: member.displayName,
         color: member.color,
+        icon: member.icon,
         sortOrder: member.sortOrder,
       },
     })
@@ -61,7 +63,7 @@ export class MemberRepository {
   async update(
     familyId: FamilyId,
     id: MemberId,
-    data: { displayName?: string; color?: MemberColor; sortOrder?: number },
+    data: { displayName?: string; color?: MemberColor; icon?: string | null; sortOrder?: number },
   ): Promise<void> {
     await this.tx.member.updateMany({ where: { id, familyId, deletedAt: null }, data })
   }

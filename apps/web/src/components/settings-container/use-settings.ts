@@ -1,3 +1,4 @@
+import type { MemberColor } from '@iegoto/domain'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
 import { useAppToast } from '@/hooks/use-app-toast'
@@ -26,7 +27,19 @@ export function useSettings(family: FamilyInfo) {
   )
   const updateMember = useMutation(
     trpc.member.update.mutationOptions({
-      onSuccess: invalidateMe,
+      onSuccess: async () => {
+        await invalidateMe()
+        toast.success('メンバーを更新しました')
+      },
+      onError: (e) => toast.error(e.message),
+    }),
+  )
+  const renameFamilyMutation = useMutation(
+    trpc.family.rename.mutationOptions({
+      onSuccess: async () => {
+        await invalidateMe()
+        toast.success('家族名を変更しました')
+      },
       onError: (e) => toast.error(e.message),
     }),
   )
@@ -96,8 +109,13 @@ export function useSettings(family: FamilyInfo) {
       }
     },
     isAddingMember: addMember.isPending,
-    renameMember: (memberId: string, displayName: string) =>
-      updateMember.mutate({ memberId, displayName }),
+    updateMemberProfile: (
+      memberId: string,
+      changes: { displayName: string; icon: string | null; color: MemberColor },
+    ) => updateMember.mutate({ memberId, ...changes }),
+    isUpdatingMember: updateMember.isPending,
+    renameFamily: (name: string) => renameFamilyMutation.mutate({ name }),
+    isRenamingFamily: renameFamilyMutation.isPending,
     removeMember: (memberId: string) => deleteMember.mutate({ memberId }),
     isRemovingMember: deleteMember.isPending,
     hasActiveInvitation: activeInvitation.data != null,

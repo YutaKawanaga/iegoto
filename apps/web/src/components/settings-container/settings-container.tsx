@@ -1,12 +1,13 @@
-import { Bell, Copy, LogOut, Trash2, UserPlus } from 'lucide-react'
+import { Bell, Copy, LogOut, Pencil, Trash2, UserPlus } from 'lucide-react'
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Input } from '@/components/ui/input'
-import type { FamilyInfo } from '@/hooks/use-me'
+import type { FamilyInfo, MemberInfo } from '@/hooks/use-me'
 import { usePushNotifications } from '@/hooks/use-push-notifications'
 import { MEMBER_BG } from '@/lib/member-colors'
 import { cn } from '@/lib/utils'
+import { MemberEditDialog } from './member-edit-dialog'
 import { useSettings } from './use-settings'
 
 const NOTIFICATION_KINDS = [
@@ -72,15 +73,55 @@ function NotificationSection() {
 export function SettingsContainer({ family }: { family: FamilyInfo }) {
   const s = useSettings(family)
   const [confirmingLeave, setConfirmingLeave] = useState(false)
+  const [editingFamilyName, setEditingFamilyName] = useState<string | null>(null)
+  const [editingMember, setEditingMember] = useState<MemberInfo | null>(null)
 
   return (
     <div className="space-y-6">
       <h1 className="text-xl font-bold">設定</h1>
       <section>
         <h2 className="mb-2 text-sm font-semibold text-muted-foreground">家族</h2>
-        <p className="rounded-xl border border-border bg-card p-4 text-sm font-medium">
-          {family.name}
-        </p>
+        {editingFamilyName === null ? (
+          <div className="flex items-center justify-between rounded-xl border border-border bg-card p-4">
+            <p className="text-sm font-medium">{family.name}</p>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8 text-muted-foreground"
+              aria-label="家族名を変更"
+              onClick={() => setEditingFamilyName(family.name)}
+            >
+              <Pencil className="h-4 w-4" />
+            </Button>
+          </div>
+        ) : (
+          <form
+            className="flex gap-2"
+            onSubmit={(e) => {
+              e.preventDefault()
+              s.renameFamily(editingFamilyName)
+              setEditingFamilyName(null)
+            }}
+          >
+            <Input
+              aria-label="家族名"
+              value={editingFamilyName}
+              onChange={(e) => setEditingFamilyName(e.target.value)}
+              maxLength={50}
+              // biome-ignore lint/a11y/noAutofocus: 編集開始の明示操作直後のフォーカス移動
+              autoFocus
+            />
+            <Button
+              type="submit"
+              disabled={editingFamilyName.trim().length === 0 || s.isRenamingFamily}
+            >
+              保存
+            </Button>
+            <Button type="button" variant="ghost" onClick={() => setEditingFamilyName(null)}>
+              キャンセル
+            </Button>
+          </form>
+        )}
       </section>
 
       <section>
@@ -93,25 +134,34 @@ export function SettingsContainer({ family }: { family: FamilyInfo }) {
                 key={m.id}
                 className="flex items-center gap-3 border-b border-border px-4 py-3 last:border-b-0"
               >
-                <span
-                  className={cn(
-                    'flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold text-white',
-                    MEMBER_BG[m.color],
-                  )}
+                <button
+                  type="button"
+                  className="flex flex-1 items-center gap-3 text-left"
+                  aria-label={`${m.displayName}を編集`}
+                  onClick={() => setEditingMember(m)}
                 >
-                  {m.displayName.slice(0, 1)}
-                </span>
-                <div className="flex-1">
-                  <p className="text-sm font-medium">
-                    {m.displayName}
-                    {m.id === family.myMemberId && (
-                      <span className="ml-1.5 text-xs text-muted-foreground">(自分)</span>
+                  <span
+                    className={cn(
+                      'flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold text-white',
+                      MEMBER_BG[m.color],
+                      m.icon !== null && 'text-base',
                     )}
-                  </p>
-                  <p className="text-[11px] text-muted-foreground">
-                    {m.canLogin ? 'ログイン可' : 'プロフィールのみ'}
-                  </p>
-                </div>
+                  >
+                    {m.icon ?? m.displayName.slice(0, 1)}
+                  </span>
+                  <div className="flex-1">
+                    <p className="text-sm font-medium">
+                      {m.displayName}
+                      {m.id === family.myMemberId && (
+                        <span className="ml-1.5 text-xs text-muted-foreground">(自分)</span>
+                      )}
+                    </p>
+                    <p className="text-[11px] text-muted-foreground">
+                      {m.canLogin ? 'ログイン可' : 'プロフィールのみ'}
+                    </p>
+                  </div>
+                  <Pencil className="h-4 w-4 text-muted-foreground" />
+                </button>
                 {m.id !== family.myMemberId && (
                   <Button
                     variant="ghost"
@@ -131,6 +181,17 @@ export function SettingsContainer({ family }: { family: FamilyInfo }) {
               </li>
             ))}
         </ul>
+        {editingMember !== null && (
+          <MemberEditDialog
+            member={editingMember}
+            isPending={s.isUpdatingMember}
+            onClose={() => setEditingMember(null)}
+            onSave={(changes) => {
+              s.updateMemberProfile(editingMember.id, changes)
+              setEditingMember(null)
+            }}
+          />
+        )}
         <form
           className="mt-2 flex gap-2"
           onSubmit={(e) => {

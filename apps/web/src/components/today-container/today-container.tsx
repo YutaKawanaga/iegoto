@@ -101,7 +101,7 @@ function EventList({ events, members }: { events: Occurrence[]; members: MemberI
                     MEMBER_BG[m.color],
                   )}
                 >
-                  {m.displayName.slice(0, 1)}
+                  {m.icon ?? m.displayName.slice(0, 1)}
                 </span>
               )
             })}

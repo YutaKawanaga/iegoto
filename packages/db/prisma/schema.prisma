@@ -85,6 +85,8 @@ model Member {
   displayName   String    @map("display_name")
   /// メンバーカラー識別子 (domain の MEMBER_COLORS)
   color         String
+  /// アイコン (絵文字)。null = 未設定
+  icon          String?
   sortOrder     Int       @map("sort_order")
   deletedAt     DateTime? @map("deleted_at") @db.Timestamptz()
   createdAt     DateTime  @default(now()) @map("created_at") @db.Timestamptz()
